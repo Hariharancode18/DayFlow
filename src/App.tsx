@@ -10,12 +10,18 @@ import {
   CheckCircle2,
   Clock3,
   DollarSign,
+  Eye,
+  EyeOff,
   Home,
   LogOut,
   Menu,
+  Pencil,
+  Plus,
   Search,
   Settings,
+  ShieldCheck,
   Sparkles,
+  Trash2,
   User,
   Users,
   Wallet,
@@ -343,146 +349,353 @@ function LoginPage({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fillDemo = (selectedRole: Role) => {
+    setError("");
+
+    if (selectedRole === "hr") {
+      setEmail("admin@dayflow.com");
+      setPassword("admin123");
+    } else {
+      setEmail("employee@dayflow.com");
+      setPassword("employee123");
+    }
+  };
 
   const handleLogin = () => {
-    if (!email || !password) {
-      setError("Please enter email and password.");
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      setError("Please enter your email and password.");
       return;
     }
 
-    if (
-      email === "admin@dayflow.com" &&
-      password === "admin123"
-    ) {
-      onLogin("hr");
-      return;
-    }
+    setLoading(true);
+    setError("");
 
-    if (
-      email === "employee@dayflow.com" &&
-      password === "employee123"
-    ) {
-      onLogin("employee");
-      return;
-    }
+    window.setTimeout(() => {
+      if (
+        normalizedEmail === "admin@dayflow.com" &&
+        password === "admin123"
+      ) {
+        if (rememberMe) {
+          localStorage.setItem("dayflow_remember", "true");
+        }
 
-    setError(
-      "Invalid credentials. Use one of the demo accounts below.",
-    );
+        onLogin("hr");
+        return;
+      }
+
+      if (
+        normalizedEmail === "employee@dayflow.com" &&
+        password === "employee123"
+      ) {
+        if (rememberMe) {
+          localStorage.setItem("dayflow_remember", "true");
+        }
+
+        onLogin("employee");
+        return;
+      }
+
+      setLoading(false);
+      setError(
+        "Invalid credentials. Please check your email and password.",
+      );
+    }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 px-5 py-10">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-10 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl font-bold text-slate-950">
-            D
+    <div className="min-h-screen overflow-hidden bg-slate-950">
+      <div className="grid min-h-screen lg:grid-cols-[1.15fr_0.85fr]">
+        {/* =================================================
+            BRAND PANEL
+        ================================================= */}
+        <div className="relative hidden overflow-hidden lg:flex">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.40),transparent_32%),radial-gradient(circle_at_85%_80%,rgba(79,70,229,0.30),transparent_35%)]" />
+
+          <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-indigo-600/10 blur-3xl" />
+          <div className="absolute -bottom-24 right-10 h-80 w-80 rounded-full bg-violet-600/10 blur-3xl" />
+
+          <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950 shadow-xl">
+                D
+              </div>
+
+              <div>
+                <p className="text-xl font-bold text-white">
+                  DayFlow
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  HR Intelligence
+                </p>
+              </div>
+            </div>
+
+            <div className="max-w-2xl">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-indigo-300">
+                <Sparkles size={14} />
+                Intelligent workforce management
+              </div>
+
+              <h1 className="text-5xl font-black leading-[1.08] tracking-tight text-white xl:text-6xl">
+                Your people.
+                <br />
+                Your flow.
+                <br />
+                <span className="text-indigo-400">One workspace.</span>
+              </h1>
+
+              <p className="mt-7 max-w-xl text-base leading-7 text-slate-400 xl:text-lg">
+                DayFlow brings employee management, attendance, leave,
+                payroll and HR intelligence together in one focused workspace.
+              </p>
+
+              <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3">
+                {[
+                  [<Users size={18} />, "Workforce", "Employee management"],
+                  [<BarChart3 size={18} />, "Insights", "HR analytics"],
+                  [<Sparkles size={18} />, "AI", "Smart assistance"],
+                ].map(([icon, title, description]) => (
+                  <div
+                    key={title as string}
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm"
+                  >
+                    <div className="text-indigo-400">{icon}</div>
+                    <p className="mt-3 text-sm font-bold text-white">{title}</p>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                      {description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              DayFlow • HR Management System • Hackathon Prototype
+            </p>
           </div>
-
-          <h1 className="mt-5 text-5xl font-bold text-white">
-            DayFlow
-          </h1>
-
-          <p className="mt-3 text-lg text-slate-400">
-            Human Resource Management System
-          </p>
         </div>
 
-        <div className="mx-auto max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
-          <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-            Welcome Back
-          </p>
-
-          <h2 className="mt-2 text-3xl font-bold text-slate-950">
-            Sign in to DayFlow
-          </h2>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Access your workplace dashboard.
-          </p>
-
-          <div className="mt-7 space-y-5">
-            <label className="block text-sm font-semibold text-slate-700">
-              Email
-
-              <input
-                value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
-                placeholder="you@company.com"
-              />
-            </label>
-
-            <label className="block text-sm font-semibold text-slate-700">
-              Password
-
-              <input
-                type="password"
-                value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleLogin();
-                  }
-                }}
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
-                placeholder="Enter password"
-              />
-            </label>
-
-            {error && (
-              <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
-                {error}
+        {/* =================================================
+            LOGIN PANEL
+        ================================================= */}
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-8 sm:px-8">
+          <div className="w-full max-w-md">
+            <div className="mb-7 flex items-center gap-3 lg:hidden">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-lg font-black text-white">
+                D
               </div>
-            )}
+              <div>
+                <p className="text-xl font-bold text-slate-950">DayFlow</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                  HR Intelligence
+                </p>
+              </div>
+            </div>
 
-            <button
-              onClick={handleLogin}
-              className="w-full rounded-xl bg-slate-950 px-5 py-3.5 font-semibold text-white hover:bg-indigo-600"
-            >
-              Sign in
-            </button>
-          </div>
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-300/30 sm:p-8">
+              <div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <ShieldCheck size={21} />
+                </div>
 
-          <div className="my-7 border-t border-slate-100" />
+                <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">
+                  Welcome back
+                </p>
 
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Demo Accounts
-          </p>
+                <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
+                  Sign in to DayFlow
+                </h2>
 
-          <div className="mt-4 space-y-3">
-            <button
-              onClick={() => {
-                setEmail("employee@dayflow.com");
-                setPassword("employee123");
-              }}
-              className="w-full rounded-xl border border-slate-200 p-4 text-left hover:border-indigo-300 hover:bg-indigo-50"
-            >
-              <b>Employee</b>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Access your personalized workplace dashboard.
+                </p>
+              </div>
 
-              <p className="mt-1 text-xs text-slate-400">
-                employee@dayflow.com / employee123
+              {/* ERROR */}
+              {error && (
+                <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+                  <AlertCircle className="mt-0.5 shrink-0" size={17} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="mt-7 space-y-5">
+                {/* EMAIL */}
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">
+                    Work email
+                  </span>
+
+                  <div className="relative mt-2">
+                    <input
+                      value={email}
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+                        setError("");
+                      }}
+                      autoComplete="email"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                      placeholder="you@company.com"
+                    />
+                  </div>
+                </label>
+
+                {/* PASSWORD */}
+                <label className="block">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-700">
+                      Password
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setError(
+                          "Password reset is available in the production version.",
+                        )
+                      }
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  <div className="relative mt-2">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+                        setError("");
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !loading) {
+                          handleLogin();
+                        }
+                      }}
+                      autoComplete="current-password"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                      placeholder="Enter your password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword((value) => !value)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      aria-label={
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                </label>
+
+                {/* REMEMBER */}
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) =>
+                      setRememberMe(event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Remember me on this device
+                </label>
+
+                {/* LOGIN */}
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleLogin}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign in
+                      <ArrowRight size={17} />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* DEMO ACCOUNTS */}
+              <div className="my-7 flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Quick demo access
+                </span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => fillDemo("employee")}
+                  className="group rounded-xl border border-slate-200 p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 group-hover:bg-white">
+                      <User size={17} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">
+                        Employee
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-slate-400">
+                        Demo workspace
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fillDemo("hr")}
+                  className="group rounded-xl border border-slate-200 p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-white">
+                      <ShieldCheck size={17} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">
+                        HR Admin
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-slate-400">
+                        Management workspace
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <p className="mt-6 text-center text-[11px] leading-5 text-slate-400">
+                Demo credentials are included for the hackathon prototype.
+                Production authentication should use a secure backend.
               </p>
-            </button>
-
-            <button
-              onClick={() => {
-                setEmail("admin@dayflow.com");
-                setPassword("admin123");
-              }}
-              className="w-full rounded-xl border border-slate-200 p-4 text-left hover:border-indigo-300 hover:bg-indigo-50"
-            >
-              <b>HR Administrator</b>
-
-              <p className="mt-1 text-xs text-slate-400">
-                admin@dayflow.com / admin123
-              </p>
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -831,12 +1044,23 @@ function EmployeeDashboard({
 ========================================================= */
 
 function HRDashboard({
+  employees,
   leaveRequests,
   setActivePage,
 }: {
+  employees: HREmployee[];
   leaveRequests: LeaveRequest[];
   setActivePage: (page: Page) => void;
 }) {
+  const present = employees.filter(
+    (employee) => employee.attendance === "Present",
+  ).length;
+
+  const attendanceRate =
+    employees.length > 0
+      ? Math.round((present / employees.length) * 100)
+      : 0;
+
   const pending = leaveRequests.filter(
     (request) => request.status === "Pending",
   ).length;
@@ -861,14 +1085,14 @@ function HRDashboard({
         <MetricCard
           icon={<Users size={20} />}
           label="Employees"
-          value="48"
+          value={String(employees.length)}
           description="Active employees"
         />
 
         <MetricCard
           icon={<Clock3 size={20} />}
           label="Attendance"
-          value="85%"
+          value={`${attendanceRate}%`}
           description="Today's attendance"
         />
 
@@ -1445,8 +1669,10 @@ function ProfilePage() {
 ========================================================= */
 
 function AIAssistant({
+  employees,
   leaveRequests,
 }: {
+  employees: HREmployee[];
   leaveRequests: LeaveRequest[];
 }) {
   const [messages, setMessages] =
@@ -1484,16 +1710,16 @@ function AIAssistant({
       text.includes("attendance") ||
       text.includes("present")
     ) {
-      const present = HR_EMPLOYEES.filter(
+      const present = employees.filter(
         (employee) =>
           employee.attendance === "Present",
       ).length;
 
-      return `The demo organization has ${present} of ${HR_EMPLOYEES.length} listed employees present today.`;
+      return `The organization has ${present} of ${employees.length} employees present today.`;
     }
 
     if (text.includes("employee")) {
-      return "DayFlow currently has 48 employees in the organization.";
+      return `DayFlow currently has ${employees.length} employees in the organization.`;
     }
 
     if (
@@ -1599,145 +1825,128 @@ function AIAssistant({
    EMPLOYEES
 ========================================================= */
 
-function EmployeesPage() {
+function EmployeesPage({
+  employees,
+  onEmployeesChange,
+}: {
+  employees: HREmployee[];
+  onEmployeesChange: (employees: HREmployee[]) => void;
+}) {
   const [search, setSearch] = useState("");
-  const [department, setDepartment] =
-    useState("All");
-  const [attendance, setAttendance] =
-    useState("All");
-  const [selected, setSelected] =
-    useState<HREmployee | null>(null);
+  const [department, setDepartment] = useState("All");
+  const [attendance, setAttendance] = useState("All");
+  const [selected, setSelected] = useState<HREmployee | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<HREmployee | null>(null);
 
   const departments = [
     "All",
-    ...Array.from(
-      new Set(
-        HR_EMPLOYEES.map(
-          (employee) => employee.department,
-        ),
-      ),
-    ),
+    ...Array.from(new Set(employees.map((employee) => employee.department))),
   ];
 
-  const employees = HR_EMPLOYEES.filter(
-    (employee) => {
-      const searchText = search.toLowerCase();
+  const filteredEmployees = employees.filter((employee) => {
+    const searchText = search.toLowerCase().trim();
+    const matchesSearch =
+      !searchText ||
+      `${employee.name} ${employee.id} ${employee.role} ${employee.department}`
+        .toLowerCase()
+        .includes(searchText);
+    const matchesDepartment =
+      department === "All" || employee.department === department;
+    const matchesAttendance =
+      attendance === "All" || employee.attendance === attendance;
+    return matchesSearch && matchesDepartment && matchesAttendance;
+  });
 
-      const matchesSearch =
-        !searchText ||
-        `${employee.name} ${employee.id} ${employee.role} ${employee.department}`
-          .toLowerCase()
-          .includes(searchText);
+  const present = employees.filter((employee) => employee.attendance === "Present").length;
+  const onLeave = employees.filter((employee) => employee.attendance === "On Leave").length;
+  const absent = employees.filter((employee) => employee.attendance === "Absent").length;
 
-      const matchesDepartment =
-        department === "All" ||
-        employee.department === department;
+  const handleDelete = (employeeId: string) => {
+    const employee = employees.find((item) => item.id === employeeId);
+    if (!employee) return;
 
-      const matchesAttendance =
-        attendance === "All" ||
-        employee.attendance === attendance;
+    if (!window.confirm(`Delete ${employee.name} from DayFlow?`)) return;
 
-      return (
-        matchesSearch &&
-        matchesDepartment &&
-        matchesAttendance
+    onEmployeesChange(employees.filter((item) => item.id !== employeeId));
+    if (selected?.id === employeeId) setSelected(null);
+  };
+
+  const handleSave = (employee: HREmployee) => {
+    if (editingEmployee) {
+      onEmployeesChange(
+        employees.map((item) => item.id === employee.id ? employee : item),
       );
-    },
-  );
-
-  const present = HR_EMPLOYEES.filter(
-    (employee) =>
-      employee.attendance === "Present",
-  ).length;
-
-  const onLeave = HR_EMPLOYEES.filter(
-    (employee) =>
-      employee.attendance === "On Leave",
-  ).length;
-
-  const absent = HR_EMPLOYEES.filter(
-    (employee) =>
-      employee.attendance === "Absent",
-  ).length;
+    } else {
+      onEmployeesChange([...employees, employee]);
+    }
+    setShowForm(false);
+    setEditingEmployee(null);
+  };
 
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
         eyebrow="HR ADMINISTRATION"
         title="Employees"
-        description="Manage your workforce, monitor attendance, and view employee information."
+        description="Manage your workforce, monitor attendance, and maintain employee records."
       />
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          icon={<Users size={20} />}
-          label="Total Employees"
-          value="48"
-          description="Active workforce"
-        />
-
-        <MetricCard
-          icon={<CheckCircle2 size={20} />}
-          label="Present"
-          value={String(present)}
-          description="Listed today"
-        />
-
-        <MetricCard
-          icon={<CalendarDays size={20} />}
-          label="On Leave"
-          value={String(onLeave)}
-          description="Listed today"
-        />
-
-        <MetricCard
-          icon={<XCircle size={20} />}
-          label="Absent"
-          value={String(absent)}
-          description="Listed today"
-        />
+      <div className="mb-6 flex flex-col gap-4 rounded-3xl bg-slate-950 p-6 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-400">
+            WORKFORCE MANAGEMENT
+          </p>
+          <h3 className="mt-2 text-xl font-bold">Employee Directory</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Add, edit and manage your organization.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingEmployee(null);
+            setShowForm(true);
+          }}
+          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-indigo-400"
+        >
+          <Plus size={18} />
+          Add Employee
+        </button>
       </div>
 
-      <div className="mt-6 rounded-3xl border bg-white p-5 shadow-sm">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard icon={<Users size={20} />} label="Total Employees" value={String(employees.length)} description="Active workforce" />
+        <MetricCard icon={<CheckCircle2 size={20} />} label="Present" value={String(present)} description="Listed today" />
+        <MetricCard icon={<CalendarDays size={20} />} label="On Leave" value={String(onLeave)} description="Listed today" />
+        <MetricCard icon={<XCircle size={20} />} label="Absent" value={String(absent)} description="Listed today" />
+      </div>
+
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row">
           <div className="relative flex-1">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              className="w-full rounded-xl border py-3 pl-10 pr-4"
+              onChange={(event) => setSearch(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none focus:border-indigo-500"
               placeholder="Search name, ID, role or department..."
             />
           </div>
-
           <select
             value={department}
-            onChange={(event) =>
-              setDepartment(event.target.value)
-            }
-            className="rounded-xl border px-4 py-3"
+            onChange={(event) => setDepartment(event.target.value)}
+            className="rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
           >
             {departments.map((item) => (
               <option key={item} value={item}>
-                {item === "All"
-                  ? "All Departments"
-                  : item}
+                {item === "All" ? "All Departments" : item}
               </option>
             ))}
           </select>
-
           <select
             value={attendance}
-            onChange={(event) =>
-              setAttendance(event.target.value)
-            }
-            className="rounded-xl border px-4 py-3"
+            onChange={(event) => setAttendance(event.target.value)}
+            className="rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
           >
             <option value="All">All Status</option>
             <option value="Present">Present</option>
@@ -1746,105 +1955,113 @@ function EmployeesPage() {
           </select>
         </div>
 
-        <p className="mt-4 text-xs text-slate-400">
-          Showing{" "}
-          <b>{employees.length}</b> of{" "}
-          {HR_EMPLOYEES.length} listed employees
-        </p>
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-xs text-slate-400">
+            Showing <b className="text-slate-700">{filteredEmployees.length}</b> of {employees.length} employees
+          </p>
+          {(search || department !== "All" || attendance !== "All") && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setDepartment("All");
+                setAttendance("All");
+              }}
+              className="text-xs font-bold text-indigo-600 hover:underline"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left">
+          <table className="w-full min-w-[1000px] text-left">
             <thead className="bg-slate-50">
               <tr className="text-xs uppercase tracking-wider text-slate-400">
-                <th className="px-6 py-4">
-                  Employee
-                </th>
-
-                <th className="px-6 py-4">
-                  Department
-                </th>
-
-                <th className="px-6 py-4">
-                  Role
-                </th>
-
-                <th className="px-6 py-4">
-                  Attendance
-                </th>
-
-                <th className="px-6 py-4">
-                  Check In
-                </th>
-
-                <th className="px-6 py-4">
-                  Action
-                </th>
+                <th className="px-6 py-4">Employee</th>
+                <th className="px-6 py-4">Department</th>
+                <th className="px-6 py-4">Role</th>
+                <th className="px-6 py-4">Attendance</th>
+                <th className="px-6 py-4">Check In</th>
+                <th className="px-6 py-4">Actions</th>
               </tr>
             </thead>
-
             <tbody>
-              {employees.map((employee) => (
-                <tr
-                  key={employee.id}
-                  className="border-t hover:bg-slate-50"
-                >
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 font-bold text-indigo-700">
-                        {getInitials(employee.name)}
-                      </div>
-
-                      <div>
-                        <b>{employee.name}</b>
-
-                        <p className="text-xs text-slate-400">
-                          {employee.id}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-5 text-sm">
-                    {employee.department}
-                  </td>
-
-                  <td className="px-6 py-5 text-sm text-slate-500">
-                    {employee.role}
-                  </td>
-
-                  <td className="px-6 py-5">
-                    <AttendanceStatus
-                      status={employee.attendance}
-                    />
-                  </td>
-
-                  <td className="px-6 py-5 text-sm">
-                    {employee.checkIn}
-                  </td>
-
-                  <td className="px-6 py-5">
-                    <button
-                      onClick={() =>
-                        setSelected(employee)
-                      }
-                      className="rounded-xl border px-3 py-2 text-xs font-bold hover:bg-indigo-50"
-                    >
-                      View Details
-                    </button>
+              {filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <Users size={36} className="mx-auto text-slate-300" />
+                    <p className="mt-3 font-bold text-slate-700">No employees found</p>
+                    <p className="mt-1 text-sm text-slate-400">Try changing your search or filters.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredEmployees.map((employee) => (
+                  <tr key={employee.id} className="border-t border-slate-100 transition hover:bg-slate-50">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 font-bold text-indigo-700">
+                          {getInitials(employee.name)}
+                        </div>
+                        <div>
+                          <b className="text-slate-800">{employee.name}</b>
+                          <p className="text-xs text-slate-400">{employee.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-sm text-slate-700">{employee.department}</td>
+                    <td className="px-6 py-5 text-sm text-slate-500">{employee.role}</td>
+                    <td className="px-6 py-5"><AttendanceStatus status={employee.attendance} /></td>
+                    <td className="px-6 py-5 text-sm">{employee.checkIn}</td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelected(employee)}
+                          className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingEmployee(employee);
+                            setShowForm(true);
+                          }}
+                          aria-label={`Edit ${employee.name}`}
+                          className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(employee.id)}
+                          aria-label={`Delete ${employee.name}`}
+                          className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       {selected && (
-        <EmployeeModal
-          employee={selected}
-          onClose={() => setSelected(null)}
+        <EmployeeModal employee={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {showForm && (
+        <EmployeeFormModal
+          employee={editingEmployee}
+          employees={employees}
+          onClose={() => {
+            setShowForm(false);
+            setEditingEmployee(null);
+          }}
+          onSave={handleSave}
         />
       )}
     </div>
@@ -1863,85 +2080,157 @@ function EmployeeModal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-      <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 p-6">
           <div>
-            <p className="text-xs font-bold uppercase text-indigo-500">
-              Employee Profile
-            </p>
-
-            <h2 className="mt-1 text-xl font-bold">
-              {employee.name}
-            </h2>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">Employee Profile</p>
+            <h2 className="mt-1 text-xl font-bold text-slate-950">{employee.name}</h2>
           </div>
-
-          <button onClick={onClose}>
-            <X />
+          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+            <X size={20} />
           </button>
         </div>
-
         <div className="p-6">
           <div className="flex items-center gap-4">
             <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-600 text-xl font-bold text-white">
               {getInitials(employee.name)}
             </div>
-
             <div>
-              <h3 className="text-2xl font-bold">
-                {employee.name}
-              </h3>
-
-              <p className="text-sm text-slate-500">
-                {employee.role}
-              </p>
-
-              <div className="mt-2">
-                <AttendanceStatus
-                  status={employee.attendance}
-                />
-              </div>
+              <h3 className="text-2xl font-bold">{employee.name}</h3>
+              <p className="mt-1 text-sm text-slate-500">{employee.role}</p>
+              <div className="mt-2"><AttendanceStatus status={employee.attendance} /></div>
             </div>
           </div>
-
           <div className="mt-7 grid gap-4 sm:grid-cols-2">
-            <SimpleRow
-              label="Employee ID"
-              value={employee.id}
-            />
+            <SimpleRow label="Employee ID" value={employee.id} />
+            <SimpleRow label="Department" value={employee.department} />
+            <SimpleRow label="Role" value={employee.role} />
+            <SimpleRow label="Check In" value={employee.checkIn} />
+            <SimpleRow label="Check Out" value={employee.checkOut} />
+            <SimpleRow label="Attendance" value={employee.attendance} />
+          </div>
+          <button onClick={onClose} className="mt-7 w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-indigo-600">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <SimpleRow
-              label="Department"
-              value={employee.department}
-            />
+/* =========================================================
+   ADD / EDIT EMPLOYEE
+========================================================= */
 
-            <SimpleRow
-              label="Role"
-              value={employee.role}
-            />
+function EmployeeFormModal({
+  employee,
+  employees,
+  onClose,
+  onSave,
+}: {
+  employee: HREmployee | null;
+  employees: HREmployee[];
+  onClose: () => void;
+  onSave: (employee: HREmployee) => void;
+}) {
+  const [name, setName] = useState(employee?.name ?? "");
+  const [department, setDepartment] = useState(employee?.department ?? "IT");
+  const [role, setRole] = useState(employee?.role ?? "");
+  const [attendance, setAttendance] = useState<HREmployee["attendance"]>(employee?.attendance ?? "Present");
+  const [checkIn, setCheckIn] = useState(employee?.checkIn ?? "--:--");
+  const [checkOut, setCheckOut] = useState(employee?.checkOut ?? "--:--");
+  const [error, setError] = useState("");
 
-            <SimpleRow
-              label="Check In"
-              value={employee.checkIn}
-            />
+  const handleSubmit = () => {
+    if (!name.trim() || !department.trim() || !role.trim()) {
+      setError("Please fill in all required fields.");
+      return;
+    }
 
-            <SimpleRow
-              label="Check Out"
-              value={employee.checkOut}
-            />
+    const duplicate = employees.some(
+      (item) => item.id !== employee?.id && item.name.toLowerCase() === name.trim().toLowerCase(),
+    );
+    if (duplicate) {
+      setError("An employee with this name already exists.");
+      return;
+    }
 
-            <SimpleRow
-              label="Attendance"
-              value={employee.attendance}
-            />
+    let employeeId = employee?.id;
+    if (!employeeId) {
+      const usedNumbers = employees
+        .map((item) => Number(item.id.replace(/\D/g, "")))
+        .filter((value) => Number.isFinite(value));
+      const nextNumber = Math.max(0, ...usedNumbers) + 1;
+      employeeId = `EMP${String(nextNumber).padStart(3, "0")}`;
+    }
+
+    onSave({
+      id: employeeId,
+      name: name.trim(),
+      department: department.trim(),
+      role: role.trim(),
+      attendance,
+      checkIn: attendance === "Present" ? checkIn || "--:--" : "--:--",
+      checkOut: attendance === "Present" ? checkOut || "--:--" : "--:--",
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 p-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-500">
+              {employee ? "UPDATE EMPLOYEE" : "NEW EMPLOYEE"}
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+              {employee ? "Edit Employee" : "Add Employee"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">Maintain accurate employee records.</p>
+          </div>
+          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"><X size={20} /></button>
+        </div>
+
+        <div className="p-6">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="block text-sm font-semibold text-slate-700">
+              Full Name *
+              <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500" placeholder="Employee name" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Department *
+              <input value={department} onChange={(event) => setDepartment(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500" placeholder="IT" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Role *
+              <input value={role} onChange={(event) => setRole(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500" placeholder="Software Developer" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Attendance
+              <select value={attendance} onChange={(event) => setAttendance(event.target.value as HREmployee["attendance"])} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="On Leave">On Leave</option>
+              </select>
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Check In
+              <input value={checkIn} onChange={(event) => setCheckIn(event.target.value)} disabled={attendance !== "Present"} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none disabled:bg-slate-100 focus:border-indigo-500" placeholder="09:00 AM" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Check Out
+              <input value={checkOut} onChange={(event) => setCheckOut(event.target.value)} disabled={attendance !== "Present"} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none disabled:bg-slate-100 focus:border-indigo-500" placeholder="06:00 PM" />
+            </label>
           </div>
 
-          <button
-            onClick={onClose}
-            className="mt-6 rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white"
-          >
-            Close
-          </button>
+          {error && <div className="mt-5 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-600">{error}</div>}
+
+          <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button onClick={onClose} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button onClick={handleSubmit} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700">
+              <Check size={17} />
+              {employee ? "Save Changes" : "Add Employee"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2160,39 +2449,35 @@ function HRAttendancePage({
    HR PAYROLL
 ========================================================= */
 
-function HRPayrollPage() {
-  const employees = [
-    [
-      "Hariharan V",
-      "IT",
-      "₹36,000",
-      "₹31,000",
-    ],
-    [
-      "Arjun Kumar",
-      "Engineering",
-      "₹42,000",
-      "₹36,500",
-    ],
-    [
-      "Priya Sharma",
-      "Design",
-      "₹38,000",
-      "₹33,200",
-    ],
-    [
-      "Rahul Kumar",
-      "Engineering",
-      "₹40,000",
-      "₹34,800",
-    ],
-    [
-      "Sneha R",
-      "HR",
-      "₹32,000",
-      "₹28,400",
-    ],
-  ];
+function HRPayrollPage({
+  employees,
+}: {
+  employees: HREmployee[];
+}) {
+  const salaryByEmployee: Record<string, [number, number]> = {
+    EMP001: [36000, 31000],
+    EMP002: [42000, 36500],
+    EMP003: [38000, 33200],
+    EMP004: [40000, 34800],
+    EMP005: [32000, 28400],
+    EMP006: [39000, 33800],
+  };
+
+  const rows = employees.map((employee) => {
+    const [gross, net] =
+      salaryByEmployee[employee.id] ?? [35000, 30000];
+
+    return {
+      employee,
+      gross,
+      net,
+    };
+  });
+
+  const totalNet = rows.reduce(
+    (sum, row) => sum + row.net,
+    0,
+  );
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -2206,22 +2491,22 @@ function HRPayrollPage() {
         <MetricCard
           icon={<Users size={20} />}
           label="Employees"
-          value="48"
+          value={String(employees.length)}
           description="Payroll workforce"
         />
 
         <MetricCard
           icon={<CheckCircle2 size={20} />}
           label="Processed"
-          value="43"
-          description="Completed"
+          value={String(employees.length)}
+          description="Current employee records"
         />
 
         <MetricCard
-          icon={<Clock3 size={20} />}
-          label="Pending"
-          value="5"
-          description="Needs processing"
+          icon={<Wallet size={20} />}
+          label="Monthly Net"
+          value={`₹${totalNet.toLocaleString("en-IN")}`}
+          description="Estimated payroll"
         />
 
         <MetricCard
@@ -2250,51 +2535,34 @@ function HRPayrollPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[750px] text-left">
+          <table className="w-full min-w-[800px] text-left">
             <thead className="bg-slate-50">
               <tr className="text-xs uppercase text-slate-400">
-                <th className="px-6 py-4">
-                  Employee
-                </th>
-
-                <th className="px-6 py-4">
-                  Department
-                </th>
-
-                <th className="px-6 py-4">
-                  Gross
-                </th>
-
-                <th className="px-6 py-4">
-                  Net
-                </th>
-
-                <th className="px-6 py-4">
-                  Status
-                </th>
+                <th className="px-6 py-4">Employee</th>
+                <th className="px-6 py-4">Department</th>
+                <th className="px-6 py-4">Gross</th>
+                <th className="px-6 py-4">Net</th>
+                <th className="px-6 py-4">Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {employees.map((employee) => (
-                <tr
-                  key={employee[0]}
-                  className="border-t"
-                >
+              {rows.map((row) => (
+                <tr key={row.employee.id} className="border-t">
                   <td className="px-6 py-5 font-semibold">
-                    {employee[0]}
+                    {row.employee.name}
                   </td>
 
                   <td className="px-6 py-5 text-sm text-slate-500">
-                    {employee[1]}
+                    {row.employee.department}
                   </td>
 
                   <td className="px-6 py-5 text-sm">
-                    {employee[2]}
+                    ₹{row.gross.toLocaleString("en-IN")}
                   </td>
 
                   <td className="px-6 py-5 font-bold">
-                    {employee[3]}
+                    ₹{row.net.toLocaleString("en-IN")}
                   </td>
 
                   <td className="px-6 py-5">
@@ -2304,6 +2572,14 @@ function HRPayrollPage() {
                   </td>
                 </tr>
               ))}
+
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">
+                    No employees available for payroll.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -3036,6 +3312,19 @@ export default function App() {
   const [activePage, setActivePage] =
     useState<Page>("Dashboard");
 
+  const [employees, setEmployees] = useState<HREmployee[]>(() => {
+    try {
+      const saved = localStorage.getItem("dayflow_employees");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // Use default employee data.
+    }
+    return HR_EMPLOYEES;
+  });
+
   const [leaveRequests, setLeaveRequests] =
     useState<LeaveRequest[]>(
       INITIAL_LEAVE_REQUESTS,
@@ -3059,6 +3348,11 @@ export default function App() {
   const handleLogout = () => {
     setLoggedIn(false);
     setActivePage("Dashboard");
+  };
+
+  const handleEmployeesChange = (updatedEmployees: HREmployee[]) => {
+    setEmployees(updatedEmployees);
+    localStorage.setItem("dayflow_employees", JSON.stringify(updatedEmployees));
   };
 
   const handleCheckIn = () => {
@@ -3133,6 +3427,7 @@ export default function App() {
     pageContent =
       role === "hr" ? (
         <HRDashboard
+          employees={employees}
           leaveRequests={leaveRequests}
           setActivePage={setActivePage}
         />
@@ -3168,11 +3463,17 @@ export default function App() {
   } else if (activePage === "AI Assistant") {
     pageContent = (
       <AIAssistant
+        employees={employees}
         leaveRequests={leaveRequests}
       />
     );
   } else if (activePage === "Employees") {
-    pageContent = <EmployeesPage />;
+    pageContent = (
+      <EmployeesPage
+        employees={employees}
+        onEmployeesChange={handleEmployeesChange}
+      />
+    );
   } else if (activePage === "Leave Approvals") {
     pageContent = (
       <LeaveApprovalsPage
@@ -3183,15 +3484,19 @@ export default function App() {
   } else if (activePage === "HR Attendance") {
     pageContent = (
       <HRAttendancePage
-        employees={HR_EMPLOYEES}
+        employees={employees}
       />
     );
   } else if (activePage === "HR Payroll") {
-    pageContent = <HRPayrollPage />;
+    pageContent = (
+      <HRPayrollPage
+        employees={employees}
+      />
+    );
   } else if (activePage === "HR Insights") {
     pageContent = (
       <HRInsightsPage
-        employees={HR_EMPLOYEES}
+        employees={employees}
         leaveRequests={leaveRequests}
       />
     );
