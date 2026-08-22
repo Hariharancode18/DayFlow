@@ -2323,97 +2323,246 @@ function HRInsightsPage({
   employees: HREmployee[];
   leaveRequests: LeaveRequest[];
 }) {
-  const total = employees.length;
+  const [departmentFilter, setDepartmentFilter] =
+    useState("All");
 
-  const present = employees.filter(
-    (employee) =>
-      employee.attendance === "Present",
-  ).length;
-
-  const absent = employees.filter(
-    (employee) =>
-      employee.attendance === "Absent",
-  ).length;
-
-  const onLeave = employees.filter(
-    (employee) =>
-      employee.attendance === "On Leave",
-  ).length;
-
-  const pending = leaveRequests.filter(
-    (request) =>
-      request.status === "Pending",
-  ).length;
-
-  const attendanceRate = total
-    ? Math.round((present / total) * 100)
-    : 0;
-
-  const risk =
-    absent >= 2 || pending >= 3
-      ? "High"
-      : absent || pending
-        ? "Medium"
-        : "Low";
-
-  const departments = Array.from(
-    new Set(
-      employees.map(
-        (employee) => employee.department,
-      ),
+  const departments = [
+    "All",
+    ...Array.from(
+      new Set(
+        employees.map(
+          (employee) => employee.department
+        )
+      )
     ),
+  ];
+
+  const filteredEmployees =
+    departmentFilter === "All"
+      ? employees
+      : employees.filter(
+          (employee) =>
+            employee.department ===
+            departmentFilter
+        );
+
+  const total = filteredEmployees.length;
+
+  const present = filteredEmployees.filter(
+    (employee) =>
+      employee.attendance === "Present"
+  ).length;
+
+  const absent = filteredEmployees.filter(
+    (employee) =>
+      employee.attendance === "Absent"
+  ).length;
+
+  const onLeave = filteredEmployees.filter(
+    (employee) =>
+      employee.attendance === "On Leave"
+  ).length;
+
+  const pendingLeaves =
+    leaveRequests.filter(
+      (request) =>
+        request.status === "Pending"
+    ).length;
+
+  const approvedLeaves =
+    leaveRequests.filter(
+      (request) =>
+        request.status === "Approved"
+    ).length;
+
+  const attendanceRate =
+    total > 0
+      ? Math.round((present / total) * 100)
+      : 0;
+
+  /*
+   * Workforce health score
+   *
+   * Attendance contributes 60%.
+   * Leave stability contributes 20%.
+   * Absence rate contributes 20%.
+   */
+  const attendanceScore = attendanceRate * 0.6;
+
+  const leaveScore =
+    Math.max(
+      0,
+      100 - pendingLeaves * 10
+    ) * 0.2;
+
+  const absenceScore =
+    total > 0
+      ? Math.max(
+          0,
+          100 -
+            (absent / total) * 100
+        ) * 0.2
+      : 0;
+
+  const healthScore = Math.round(
+    attendanceScore +
+      leaveScore +
+      absenceScore
   );
 
+  const healthLabel =
+    healthScore >= 85
+      ? "Excellent"
+      : healthScore >= 70
+        ? "Healthy"
+        : healthScore >= 50
+          ? "Needs Attention"
+          : "Critical";
+
+  const healthStyle =
+    healthScore >= 85
+      ? "border-emerald-200 bg-emerald-50"
+      : healthScore >= 70
+        ? "border-indigo-200 bg-indigo-50"
+        : healthScore >= 50
+          ? "border-amber-200 bg-amber-50"
+          : "border-red-200 bg-red-50";
+
+  const healthText =
+    healthScore >= 85
+      ? "text-emerald-700"
+      : healthScore >= 70
+        ? "text-indigo-700"
+        : healthScore >= 50
+          ? "text-amber-700"
+          : "text-red-700";
+
+  const riskyEmployees =
+    filteredEmployees.filter(
+      (employee) =>
+        employee.attendance !== "Present"
+    );
+
+  const insightMessage =
+    attendanceRate >= 85 &&
+    pendingLeaves <= 1
+      ? "Workforce health is strong. Maintain the current attendance and leave management practices."
+      : attendanceRate >= 70
+        ? "Workforce health is stable, but HR should monitor attendance and pending leave requests."
+        : "Workforce health needs attention. HR should review attendance patterns and unresolved leave requests.";
+
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-7xl space-y-6">
       <PageHeader
-        eyebrow="HR INTELLIGENCE"
+        eyebrow="AI HR INTELLIGENCE"
         title="HR Insights"
-        description="Live workforce analytics and actionable insights for HR administrators."
+        description="Understand workforce health, attendance, leave activity and employee risk from one dashboard."
       />
 
+      {/* =================================================
+          CONTROL BAR
+      ================================================= */}
+
+      <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Analytics Scope
+          </p>
+
+          <p className="mt-1 text-sm font-semibold text-slate-800">
+            {departmentFilter === "All"
+              ? "Entire organization"
+              : `${departmentFilter} department`}
+          </p>
+        </div>
+
+        <select
+          value={departmentFilter}
+          onChange={(event) =>
+            setDepartmentFilter(
+              event.target.value
+            )
+          }
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-500"
+        >
+          {departments.map(
+            (department) => (
+              <option
+                key={department}
+                value={department}
+              >
+                {department === "All"
+                  ? "All Departments"
+                  : department}
+              </option>
+            )
+          )}
+        </select>
+      </div>
+
+      {/* =================================================
+          WORKFORCE HEALTH
+      ================================================= */}
+
       <div
-        className={`rounded-3xl border p-6 ${
-          risk === "Low"
-            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-            : risk === "Medium"
-              ? "border-amber-200 bg-amber-50 text-amber-800"
-              : "border-red-200 bg-red-50 text-red-800"
-        }`}
+        className={`rounded-3xl border p-6 shadow-sm ${healthStyle}`}
       >
-        <div className="flex items-start gap-4">
-          <AlertCircle />
-
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase">
-              HR Risk Level
-            </p>
+            <div className="flex items-center gap-2">
+              <Sparkles
+                size={18}
+                className={healthText}
+              />
 
-            <h3 className="mt-1 text-2xl font-bold">
-              {risk}
+              <p
+                className={`text-xs font-bold uppercase tracking-wider ${healthText}`}
+              >
+                Workforce Health
+              </p>
+            </div>
+
+            <h3
+              className={`mt-2 text-3xl font-bold ${healthText}`}
+            >
+              {healthLabel}
             </h3>
 
-            <p className="mt-1 text-sm">
-              {risk === "Low"
-                ? "HR operations are currently healthy."
-                : risk === "Medium"
-                  ? "Some HR items require attention."
-                  : "Immediate HR attention is recommended."}
+            <p
+              className={`mt-2 max-w-2xl text-sm ${healthText}`}
+            >
+              {insightMessage}
             </p>
+          </div>
+
+          <div className="flex h-32 w-32 shrink-0 flex-col items-center justify-center rounded-full bg-white shadow-sm">
+            <span
+              className={`text-4xl font-bold ${healthText}`}
+            >
+              {healthScore}
+            </span>
+
+            <span className="text-xs font-semibold text-slate-400">
+              / 100
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* =================================================
+          KPI CARDS
+      ================================================= */}
+
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           icon={<Users size={20} />}
-          label="Total Employees"
+          label="Employees"
           value={String(total)}
-          description="Listed workforce"
+          description="Employees in scope"
         />
 
         <MetricCard
-          icon={<BarChart3 size={20} />}
+          icon={<CheckCircle2 size={20} />}
           label="Attendance"
           value={`${attendanceRate}%`}
           description={`${present} present today`}
@@ -2421,26 +2570,40 @@ function HRInsightsPage({
 
         <MetricCard
           icon={<CalendarDays size={20} />}
-          label="On Leave"
-          value={String(onLeave)}
-          description={`${absent} absent today`}
+          label="Pending Leave"
+          value={String(pendingLeaves)}
+          description="Requests awaiting action"
         />
 
         <MetricCard
-          icon={<Wallet size={20} />}
-          label="Pending Leave"
-          value={String(pending)}
-          description="Awaiting review"
+          icon={<AlertCircle size={20} />}
+          label="Risk Employees"
+          value={String(riskyEmployees.length)}
+          description="Require attention"
         />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border bg-white p-6 shadow-sm">
-          <h3 className="font-bold">
-            Attendance Overview
-          </h3>
+      {/* =================================================
+          ATTENDANCE + LEAVE
+      ================================================= */}
 
-          <div className="mt-6 space-y-5">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                ATTENDANCE
+              </p>
+
+              <h3 className="mt-1 text-xl font-bold text-slate-950">
+                Workforce Attendance
+              </h3>
+            </div>
+
+            <Clock3 className="text-indigo-500" />
+          </div>
+
+          <div className="mt-7 space-y-6">
             <InsightBar
               label="Present"
               value={present}
@@ -2459,90 +2622,280 @@ function HRInsightsPage({
               total={total}
             />
           </div>
+
+          <div className="mt-7 grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-emerald-50 p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-600">
+                {present}
+              </p>
+
+              <p className="mt-1 text-xs text-emerald-600">
+                Present
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-amber-50 p-4 text-center">
+              <p className="text-2xl font-bold text-amber-600">
+                {onLeave}
+              </p>
+
+              <p className="mt-1 text-xs text-amber-600">
+                Leave
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-red-50 p-4 text-center">
+              <p className="text-2xl font-bold text-red-600">
+                {absent}
+              </p>
+
+              <p className="mt-1 text-xs text-red-600">
+                Absent
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-3xl border bg-white p-6 shadow-sm">
-          <h3 className="font-bold">
-            Department Snapshot
-          </h3>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                LEAVE ANALYTICS
+              </p>
 
-          <div className="mt-5 space-y-3">
-            {departments.map((department) => {
-              const list = employees.filter(
-                (employee) =>
-                  employee.department ===
-                  department,
-              );
+              <h3 className="mt-1 text-xl font-bold text-slate-950">
+                Leave Activity
+              </h3>
+            </div>
 
-              const departmentPresent =
-                list.filter(
-                  (employee) =>
-                    employee.attendance ===
-                    "Present",
-                ).length;
+            <CalendarDays className="text-indigo-500" />
+          </div>
 
-              const rate = list.length
-                ? Math.round(
-                    (departmentPresent /
-                      list.length) *
-                      100,
-                  )
-                : 0;
+          <div className="mt-7 space-y-3">
+            <LeaveSummaryRow
+              label="Pending Requests"
+              value={pendingLeaves}
+            />
 
-              return (
-                <div
-                  key={department}
-                  className="flex items-center justify-between rounded-xl bg-slate-50 p-4"
-                >
-                  <div>
-                    <b>{department}</b>
+            <LeaveSummaryRow
+              label="Approved Requests"
+              value={approvedLeaves}
+            />
 
-                    <p className="text-xs text-slate-400">
-                      {list.length} listed employees
-                    </p>
-                  </div>
+            <LeaveSummaryRow
+              label="Total Requests"
+              value={leaveRequests.length}
+            />
+          </div>
 
-                  <span className="font-bold text-indigo-600">
-                    {rate}%
-                  </span>
-                </div>
-              );
-            })}
+          <div className="mt-6 rounded-2xl bg-indigo-50 p-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+              HR Recommendation
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-indigo-900">
+              {pendingLeaves > 0
+                ? `There ${pendingLeaves === 1 ? "is" : "are"} ${pendingLeaves} leave request${pendingLeaves === 1 ? "" : "s"} waiting for HR review.`
+                : "No pending leave requests require immediate action."}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 rounded-3xl border bg-white p-6 shadow-sm">
-        <h3 className="font-bold">
-          Attention Required
-        </h3>
+      {/* =================================================
+          DEPARTMENT ANALYTICS
+      ================================================= */}
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {employees
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+              ORGANIZATION
+            </p>
+
+            <h3 className="mt-1 text-xl font-bold">
+              Department Performance
+            </h3>
+          </div>
+
+          <BarChart3 className="text-indigo-500" />
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {departments
             .filter(
-              (employee) =>
-                employee.attendance !==
-                "Present",
+              (department) =>
+                department !== "All"
             )
-            .map((employee) => (
-              <div
-                key={employee.id}
-                className="rounded-2xl border p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <b>{employee.name}</b>
+            .map((department) => {
+              const departmentEmployees =
+                employees.filter(
+                  (employee) =>
+                    employee.department ===
+                    department
+                );
 
-                  <AttendanceStatus
-                    status={employee.attendance}
-                  />
+              const departmentPresent =
+                departmentEmployees.filter(
+                  (employee) =>
+                    employee.attendance ===
+                    "Present"
+                ).length;
+
+              const departmentRate =
+                departmentEmployees.length
+                  ? Math.round(
+                      (departmentPresent /
+                        departmentEmployees.length) *
+                        100
+                    )
+                  : 0;
+
+              return (
+                <div
+                  key={department}
+                  className="rounded-2xl border border-slate-100 p-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-600">
+                      {department
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+
+                    <span className="text-lg font-bold text-indigo-600">
+                      {departmentRate}%
+                    </span>
+                  </div>
+
+                  <h4 className="mt-4 font-bold">
+                    {department}
+                  </h4>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    {departmentEmployees.length} listed employees
+                  </p>
+
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-indigo-500"
+                      style={{
+                        width: `${departmentRate}%`,
+                      }}
+                    />
+                  </div>
                 </div>
+              );
+            })}
+        </div>
+      </div>
 
-                <p className="mt-1 text-xs text-slate-400">
-                  {employee.department} ·{" "}
-                  {employee.role}
-                </p>
-              </div>
-            ))}
+      {/* =================================================
+          RISK EMPLOYEES
+      ================================================= */}
+
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-red-500">
+              ATTENTION REQUIRED
+            </p>
+
+            <h3 className="mt-1 text-xl font-bold">
+              Employee Risk Monitor
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-400">
+              Employees whose current attendance status requires HR attention.
+            </p>
+          </div>
+
+          <AlertCircle className="text-red-500" />
+        </div>
+
+        <div className="mt-6">
+          {riskyEmployees.length === 0 ? (
+            <div className="rounded-2xl bg-emerald-50 p-5 text-sm font-medium text-emerald-700">
+              Excellent! No employees currently require attention.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {riskyEmployees.map(
+                (employee) => (
+                  <div
+                    key={employee.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold">
+                        {getInitials(
+                          employee.name
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="font-bold">
+                          {employee.name}
+                        </p>
+
+                        <p className="text-xs text-slate-400">
+                          {employee.department} ·{" "}
+                          {employee.role}
+                        </p>
+                      </div>
+                    </div>
+
+                    <AttendanceStatus
+                      status={
+                        employee.attendance
+                      }
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =================================================
+          AI RECOMMENDATIONS
+      ================================================= */}
+
+      <div className="rounded-3xl bg-slate-950 p-7 text-white shadow-xl">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-500">
+            <Sparkles size={22} />
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+              DAYFLOW AI
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold">
+              HR Recommendation
+            </h3>
+
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
+              {insightMessage}
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold">
+                Attendance: {attendanceRate}%
+              </span>
+
+              <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold">
+                Pending Leave: {pendingLeaves}
+              </span>
+
+              <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold">
+                Risk Employees:{" "}
+                {riskyEmployees.length}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
