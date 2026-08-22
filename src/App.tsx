@@ -1,15 +1,20 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import {
   AlertCircle,
   ArrowRight,
   BarChart3,
   Bell,
+  Banknote,
   CalendarDays,
   Check,
   CheckCircle2,
   Clock3,
   DollarSign,
+  Download,
   Eye,
   EyeOff,
   Home,
@@ -21,13 +26,17 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Receipt,
+  TrendingUp,
   Trash2,
   User,
   Users,
   Wallet,
   X,
   XCircle,
-} from "lucide-react";
+
+  Sun,
+  Moon,} from "lucide-react";
 
 type Role = "employee" | "hr";
 
@@ -58,6 +67,15 @@ type LeaveRequest = {
   status: LeaveStatus;
 };
 
+type PayrollRecord = {
+  employeeId: string;
+  basic: number;
+  allowance: number;
+  bonus: number;
+  deductions: number;
+  status: "Processed" | "Pending";
+};
+
 type HREmployee = {
   id: string;
   name: string;
@@ -66,6 +84,334 @@ type HREmployee = {
   attendance: "Present" | "Absent" | "On Leave";
   checkIn: string;
   checkOut: string;
+};
+
+
+const DAYFLOW_UI4 = `
+:root {
+  --df-bg: #f4f7fb;
+  --df-surface: rgba(255,255,255,.88);
+  --df-primary: #4f46e5;
+  --df-primary-2: #7c3aed;
+  --df-cyan: #0891b2;
+  --df-navy: #0b1026;
+  --df-text: #0f172a;
+  --df-muted: #64748b;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(99,102,241,.10), transparent 25%),
+    radial-gradient(circle at 100% 10%, rgba(8,145,178,.08), transparent 24%),
+    var(--df-bg);
+  color: var(--df-text);
+}
+
+.dayflow-ui4 {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 75% 0%, rgba(124,58,237,.07), transparent 24%),
+    radial-gradient(circle at 10% 90%, rgba(8,145,178,.05), transparent 25%),
+    var(--df-bg);
+}
+
+.dayflow-sidebar {
+  background:
+    radial-gradient(circle at 10% 5%, rgba(99,102,241,.25), transparent 25%),
+    linear-gradient(180deg, #080d20 0%, #101735 55%, #080d20 100%) !important;
+  box-shadow: 16px 0 45px rgba(15,23,42,.14);
+}
+
+.dayflow-logo {
+  background: linear-gradient(135deg,#818cf8,#6366f1 50%,#06b6d4) !important;
+  box-shadow: 0 12px 28px rgba(99,102,241,.28);
+}
+
+.dayflow-nav-active {
+  background: linear-gradient(135deg,#6366f1,#4f46e5 55%,#4338ca) !important;
+  box-shadow: 0 8px 24px rgba(79,70,229,.28);
+}
+
+.dayflow-topbar {
+  background: rgba(255,255,255,.80) !important;
+  border-color: rgba(148,163,184,.20) !important;
+  box-shadow: 0 8px 30px rgba(15,23,42,.045);
+  backdrop-filter: blur(18px);
+}
+
+.dayflow-main { background: transparent; }
+
+.dayflow-card {
+  background: rgba(255,255,255,.88) !important;
+  border-color: rgba(148,163,184,.22) !important;
+  box-shadow: 0 12px 35px rgba(15,23,42,.055) !important;
+  backdrop-filter: blur(14px);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.dayflow-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99,102,241,.25) !important;
+  box-shadow: 0 18px 45px rgba(79,70,229,.10) !important;
+}
+
+.dayflow-gradient-text {
+  background: linear-gradient(135deg,#4f46e5,#7c3aed 55%,#0891b2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dayflow-primary {
+  background: linear-gradient(135deg,#6366f1,#4f46e5 55%,#4338ca) !important;
+  box-shadow: 0 8px 22px rgba(79,70,229,.22);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.dayflow-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(79,70,229,.30);
+}
+
+.dayflow-input {
+  background: rgba(255,255,255,.92) !important;
+  border-color: rgba(148,163,184,.28) !important;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.dayflow-input:focus {
+  border-color: rgba(99,102,241,.65) !important;
+  box-shadow: 0 0 0 4px rgba(99,102,241,.10) !important;
+}
+
+.dayflow-table thead {
+  background: linear-gradient(90deg,#f8faff,#f4f7ff) !important;
+}
+
+.dayflow-table tbody tr {
+  transition: background .15s ease;
+}
+
+.dayflow-table tbody tr:hover {
+  background: rgba(99,102,241,.035) !important;
+}
+
+.dayflow-avatar {
+  background: linear-gradient(135deg,#6366f1,#7c3aed 55%,#0891b2) !important;
+  box-shadow: 0 8px 20px rgba(99,102,241,.22);
+}
+
+.dayflow-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.dayflow-glow::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -70px;
+  top: -100px;
+  border-radius: 999px;
+  background: rgba(99,102,241,.10);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.dayflow-login {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(99,102,241,.35), transparent 26%),
+    radial-gradient(circle at 85% 78%, rgba(8,145,178,.22), transparent 26%),
+    linear-gradient(135deg,#060a1b,#111936 55%,#080d20) !important;
+}
+
+.dayflow-login-card {
+  background: rgba(255,255,255,.94) !important;
+  border: 1px solid rgba(255,255,255,.25) !important;
+  box-shadow: 0 30px 90px rgba(2,6,23,.20) !important;
+  backdrop-filter: blur(20px);
+}
+
+.dayflow-section-title {
+  letter-spacing: -.025em;
+}
+
+@media (max-width: 1023px) {
+  .dayflow-main { padding-top: 5.5rem !important; }
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(99,102,241,.16), transparent 28%),
+    radial-gradient(circle at 100% 10%, rgba(8,145,178,.12), transparent 25%),
+    #080d1c;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .dayflow-ui4 {
+  background:
+    radial-gradient(circle at 75% 0%, rgba(124,58,237,.12), transparent 26%),
+    radial-gradient(circle at 10% 90%, rgba(8,145,178,.08), transparent 25%),
+    #080d1c;
+}
+
+html[data-theme="dark"] .dayflow-topbar {
+  background: rgba(10,16,36,.82) !important;
+  border-color: rgba(148,163,184,.14) !important;
+}
+
+html[data-theme="dark"] .dayflow-card {
+  background: rgba(15,23,42,.88) !important;
+  border-color: rgba(148,163,184,.14) !important;
+  box-shadow: 0 14px 38px rgba(0,0,0,.22) !important;
+}
+
+html[data-theme="dark"] .dayflow-card:hover {
+  border-color: rgba(129,140,248,.30) !important;
+  box-shadow: 0 20px 48px rgba(0,0,0,.30) !important;
+}
+
+html[data-theme="dark"] .dayflow-input,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: #111a31 !important;
+  color: #e5e7eb !important;
+  border-color: rgba(148,163,184,.18) !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme="dark"] .dayflow-table thead {
+  background: linear-gradient(90deg,#101a32,#111a31) !important;
+}
+
+html[data-theme="dark"] .dayflow-table tbody tr:hover {
+  background: rgba(99,102,241,.08) !important;
+}
+
+html[data-theme="dark"] .dayflow-glow {
+  background: rgba(15,23,42,.78) !important;
+  border-color: rgba(99,102,241,.18) !important;
+}
+
+html[data-theme="dark"] .text-slate-950 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #0f172a !important;
+}
+
+html[data-theme="dark"] .bg-slate-50 {
+  background-color: #0b1225 !important;
+}
+
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-100 {
+  border-color: rgba(148,163,184,.14) !important;
+}
+
+html[data-theme="dark"] .bg-indigo-50 {
+  background-color: rgba(99,102,241,.14) !important;
+}
+
+html[data-theme="dark"] .bg-slate-100 {
+  background-color: #17213a !important;
+}
+
+html[data-theme="dark"] .shadow-sm {
+  box-shadow: 0 10px 30px rgba(0,0,0,.18) !important;
+}
+
+.dayflow-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(148,163,184,.22);
+  border-radius: 999px;
+  background: rgba(148,163,184,.08);
+  backdrop-filter: blur(12px);
+}
+
+.dayflow-theme-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  transition: all .18s ease;
+}
+
+.dayflow-theme-toggle button.active {
+  background: white;
+  color: #4f46e5;
+  box-shadow: 0 4px 12px rgba(15,23,42,.12);
+}
+
+
+html[data-theme="dark"] .dayflow-topbar .border-slate-200 {
+  border-color: rgba(148,163,184,.16) !important;
+}
+
+html[data-theme="dark"] .dayflow-topbar .bg-white {
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] .dayflow-topbar [class*="bg-white"] {
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .dayflow-topbar .text-slate-900,
+html[data-theme="dark"] .dayflow-topbar .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .dayflow-topbar .text-slate-600 {
+  color: #94a3b8 !important;
+}
+html[data-theme="dark"] .dayflow-theme-toggle button.active {
+  background: #1e293b;
+  color: #a5b4fc;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+`;
+
+type DayFlowNotification = {
+  id: string;
+  title: string;
+  message: string;
+  type: "warning" | "leave" | "payroll" | "info";
+  createdAt: string;
 };
 
 type ChatMessage = {
@@ -228,7 +574,7 @@ function MetricCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <div className="dayflow-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
         {icon}
       </div>
@@ -422,7 +768,9 @@ function LoginPage({
           <div className="absolute -bottom-24 right-10 h-80 w-80 rounded-full bg-violet-600/10 blur-3xl" />
 
           <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
-            <div className="flex items-center gap-3">
+            
+
+          <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950 shadow-xl">
                 D
               </div>
@@ -770,7 +1118,7 @@ function Sidebar({
         }`}
       >
         <div className="flex h-20 items-center gap-3 border-b border-white/10 px-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500 font-bold">
+          <div className="dayflow-logo flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500 font-bold">
             D
           </div>
 
@@ -846,12 +1194,177 @@ function Sidebar({
 function Topbar({
   role,
   activePage,
+  theme,
+  setTheme,
+  employees,
+  leaveRequests,
 }: {
   role: Role;
   activePage: Page;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  employees: HREmployee[];
+  leaveRequests: LeaveRequest[];
 }) {
+  const [notificationsOpen, setNotificationsOpen] =
+    useState(false);
+
+  const [readIds, setReadIds] = useState<string[]>(
+    () => {
+      try {
+        const saved =
+          localStorage.getItem(
+            "dayflow_read_notifications",
+          );
+
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      } catch {
+        // Use empty read state.
+      }
+
+      return [];
+    },
+  );
+
+  const notifications: DayFlowNotification[] = [
+    ...employees
+      .filter(
+        (employee) =>
+          employee.attendance === "Absent",
+      )
+      .map((employee) => ({
+        id: `absent-${employee.id}`,
+        title: "Attendance alert",
+        message: `${employee.name} is marked absent today.`,
+        type: "warning" as const,
+        createdAt: "Today",
+      })),
+
+    ...leaveRequests
+      .filter(
+        (request) =>
+          request.status === "Pending",
+      )
+      .map((request) => ({
+        id: `leave-${request.id}`,
+        title: "Leave approval required",
+        message: `${request.employee} requested ${request.type} leave.`,
+        type: "leave" as const,
+        createdAt: "Pending",
+      })),
+
+    {
+      id: "payroll-august-ready",
+      title: "Payroll reminder",
+      message:
+        "August payroll records are available for review.",
+      type: "payroll",
+      createdAt: "This month",
+    },
+  ];
+
+  const unreadNotifications =
+    notifications.filter(
+      (notification) =>
+        !readIds.includes(notification.id),
+    );
+
+  const unreadCount =
+    unreadNotifications.length;
+
+  const markRead = (
+    id: string,
+  ) => {
+    setReadIds((current) => {
+      if (current.includes(id)) {
+        return current;
+      }
+
+      const next = [...current, id];
+
+      localStorage.setItem(
+        "dayflow_read_notifications",
+        JSON.stringify(next),
+      );
+
+      return next;
+    });
+  };
+
+  const markAllRead = () => {
+    const allIds = notifications.map(
+      (notification) =>
+        notification.id,
+    );
+
+    setReadIds(allIds);
+
+    localStorage.setItem(
+      "dayflow_read_notifications",
+      JSON.stringify(allIds),
+    );
+  };
+
+  const clearNotifications = () => {
+    setReadIds(
+      notifications.map(
+        (notification) =>
+          notification.id,
+      ),
+    );
+
+    localStorage.setItem(
+      "dayflow_read_notifications",
+      JSON.stringify(
+        notifications.map(
+          (notification) =>
+            notification.id,
+        ),
+      ),
+    );
+  };
+
+  const notificationIcon = (
+    type: DayFlowNotification["type"],
+  ) => {
+    if (type === "warning") {
+      return (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <AlertCircle size={17} />
+        </div>
+      );
+    }
+
+    if (type === "leave") {
+      return (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <CalendarDays size={17} />
+        </div>
+      );
+    }
+
+    if (type === "payroll") {
+      return (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <DollarSign size={17} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+        <Bell size={17} />
+      </div>
+    );
+  };
+
   return (
-    <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur lg:px-8">
+    <header className="dayflow-topbar sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur lg:px-8">
       <div className="pl-12 lg:pl-0">
         <p className="text-xs font-semibold text-slate-400">
           {role === "hr"
@@ -865,17 +1378,183 @@ function Topbar({
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block">
+        <div
+          className="dayflow-theme-toggle"
+          aria-label="Theme switcher"
+        >
+          <button
+            type="button"
+            title="Light mode"
+            className={
+              theme === "light"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setTheme("light")
+            }
+          >
+            <Sun size={16} />
+          </button>
+
+          <button
+            type="button"
+            title="Dark mode"
+            className={
+              theme === "dark"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setTheme("dark")
+            }
+          >
+            <Moon size={16} />
+          </button>
+        </div>
+
+        <button className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 sm:block">
           <Search size={18} />
         </button>
 
-        <button className="relative rounded-xl border border-slate-200 p-2.5 text-slate-500">
-          <Bell size={18} />
+        <div className="relative">
+          <button
+            onClick={() =>
+              setNotificationsOpen(
+                (open) => !open,
+              )
+            }
+            className="relative rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+            aria-label="Notifications"
+          >
+            <Bell size={18} />
 
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-red-500" />
-        </button>
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">
+                {unreadCount > 9
+                  ? "9+"
+                  : unreadCount}
+              </span>
+            )}
+          </button>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+          {notificationsOpen && (
+            <div className="absolute right-0 top-14 z-[80] w-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    Notifications
+                  </h3>
+
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {unreadCount} unread
+                  </p>
+                </div>
+
+                <button
+                  onClick={markAllRead}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              <div className="max-h-[420px] overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="px-6 py-12 text-center">
+                    <Bell
+                      size={28}
+                      className="mx-auto text-slate-300"
+                    />
+
+                    <p className="mt-3 text-sm font-semibold text-slate-600">
+                      You're all caught up
+                    </p>
+                  </div>
+                ) : (
+                  notifications.map(
+                    (notification) => {
+                      const isRead =
+                        readIds.includes(
+                          notification.id,
+                        );
+
+                      return (
+                        <button
+                          key={
+                            notification.id
+                          }
+                          onClick={() =>
+                            markRead(
+                              notification.id,
+                            )
+                          }
+                          className={`flex w-full gap-3 border-b border-slate-100 px-4 py-4 text-left transition hover:bg-indigo-50/50 ${
+                            isRead
+                              ? "opacity-60"
+                              : "bg-indigo-50/20"
+                          }`}
+                        >
+                          {notificationIcon(
+                            notification.type,
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-sm font-bold text-slate-800">
+                                {
+                                  notification.title
+                                }
+                              </p>
+
+                              {!isRead && (
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                              )}
+                            </div>
+
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                              {
+                                notification.message
+                              }
+                            </p>
+
+                            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                              {
+                                notification.createdAt
+                              }
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    },
+                  )
+                )}
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+                <button
+                  onClick={clearNotifications}
+                  className="text-xs font-semibold text-slate-400 hover:text-red-500"
+                >
+                  Clear notifications
+                </button>
+
+                <button
+                  onClick={() =>
+                    setNotificationsOpen(
+                      false,
+                    )
+                  }
+                  className="text-xs font-bold text-slate-600 hover:text-indigo-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="dayflow-avatar flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
           HV
         </div>
       </div>
@@ -883,9 +1562,6 @@ function Topbar({
   );
 }
 
-/* =========================================================
-   EMPLOYEE DASHBOARD
-========================================================= */
 
 function EmployeeDashboard({
   checkedIn,
@@ -962,7 +1638,7 @@ function EmployeeDashboard({
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="font-bold text-slate-950">
             Quick Actions
           </h3>
@@ -1002,7 +1678,7 @@ function EmployeeDashboard({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-slate-950">
@@ -1112,7 +1788,7 @@ function HRDashboard({
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold">
@@ -1146,7 +1822,7 @@ function HRDashboard({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="font-bold">
             HR Quick Access
           </h3>
@@ -1680,19 +2356,269 @@ function AIAssistant({
       {
         id: 1,
         sender: "ai",
-        text: "Hi! I'm DayFlow AI 👋 Ask me about attendance, leave, employees, payroll, or today's HR summary.",
+        text: "Hi! I'm DayFlow AI 👋 I can now use your live employee, attendance, leave and payroll data. Try asking: Who is absent today?",
       },
     ]);
 
   const [input, setInput] = useState("");
 
-  const answer = (question: string) => {
-    const text = question.toLowerCase();
+  const readPayroll = () => {
+    try {
+      const saved = localStorage.getItem(
+        "dayflow_payroll",
+      );
 
-    const pending = leaveRequests.filter(
-      (request) => request.status === "Pending",
+      if (!saved) return [];
+
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const money = (value: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const answer = (question: string) => {
+    const text = question
+      .trim()
+      .toLowerCase();
+
+    const payroll = readPayroll();
+
+    const present = employees.filter(
+      (employee) =>
+        employee.attendance === "Present",
     );
 
+    const absent = employees.filter(
+      (employee) =>
+        employee.attendance === "Absent",
+    );
+
+    const onLeave = employees.filter(
+      (employee) =>
+        employee.attendance === "On Leave",
+    );
+
+    const pending = leaveRequests.filter(
+      (request) =>
+        request.status === "Pending",
+    );
+
+    const approved = leaveRequests.filter(
+      (request) =>
+        request.status === "Approved",
+    );
+
+    const rejected = leaveRequests.filter(
+      (request) =>
+        request.status === "Rejected",
+    );
+
+    const attendanceRate =
+      employees.length === 0
+        ? 0
+        : Math.round(
+            (present.length /
+              employees.length) *
+              100,
+          );
+
+    const findEmployee = () =>
+      employees.find((employee) =>
+        text.includes(
+          employee.name.toLowerCase(),
+        ),
+      );
+
+    const namedEmployee =
+      findEmployee();
+
+    // Employee count
+    if (
+      text.includes("how many employees") ||
+      text.includes("number of employees") ||
+      text === "employees" ||
+      text.includes("total employees")
+    ) {
+      return `DayFlow currently has ${employees.length} employees in the organization.`;
+    }
+
+    // Present employees
+    if (
+      text.includes("present employees") ||
+      text.includes("who is present") ||
+      text.includes("who are present")
+    ) {
+      if (present.length === 0) {
+        return "No employees are currently marked present.";
+      }
+
+      return `There are ${present.length} employees present today: ${present
+        .map((employee) => employee.name)
+        .join(", ")}.`;
+    }
+
+    // Absent employees
+    if (
+      text.includes("absent employees") ||
+      text.includes("who is absent") ||
+      text.includes("who are absent") ||
+      text.includes("absent today")
+    ) {
+      if (absent.length === 0) {
+        return "No employees are currently marked absent today.";
+      }
+
+      return `There are ${absent.length} absent employees: ${absent
+        .map((employee) => employee.name)
+        .join(", ")}.`;
+    }
+
+    // Employees on leave
+    if (
+      text.includes("who is on leave") ||
+      text.includes("who are on leave") ||
+      text.includes("employees on leave")
+    ) {
+      if (onLeave.length === 0) {
+        return "No employees are currently marked on leave.";
+      }
+
+      return `${onLeave.length} employee${onLeave.length === 1 ? " is" : "s are"} currently on leave: ${onLeave
+        .map((employee) => employee.name)
+        .join(", ")}.`;
+    }
+
+    // Attendance percentage / summary
+    if (
+      text.includes("attendance rate") ||
+      text.includes("attendance percentage") ||
+      text.includes("attendance summary")
+    ) {
+      return `Today's attendance rate is ${attendanceRate}%. ${present.length} present, ${absent.length} absent and ${onLeave.length} on leave out of ${employees.length} employees.`;
+    }
+
+    // Department questions
+    if (
+      text.includes("department") ||
+      text.includes("how many in it") ||
+      text.includes("how many in engineering") ||
+      text.includes("how many in hr")
+    ) {
+      const departments = Array.from(
+        new Set(
+          employees.map(
+            (employee) =>
+              employee.department,
+          ),
+        ),
+      );
+
+      const requestedDepartment =
+        departments.find((department) =>
+          text.includes(
+            department.toLowerCase(),
+          ),
+        );
+
+      if (requestedDepartment) {
+        const departmentEmployees =
+          employees.filter(
+            (employee) =>
+              employee.department ===
+              requestedDepartment,
+          );
+
+        return `${requestedDepartment} has ${departmentEmployees.length} employee${departmentEmployees.length === 1 ? "" : "s"}: ${departmentEmployees
+          .map((employee) => employee.name)
+          .join(", ")}.`;
+      }
+
+      const counts = departments.map(
+        (department) => {
+          const count = employees.filter(
+            (employee) =>
+              employee.department ===
+              department,
+          ).length;
+
+          return `${department}: ${count}`;
+        },
+      );
+
+      return `Department breakdown — ${counts.join(" • ")}.`;
+    }
+
+    // Employee-specific attendance/profile
+    if (namedEmployee) {
+      if (
+        text.includes("attendance") ||
+        text.includes("status") ||
+        text.includes("present") ||
+        text.includes("absent")
+      ) {
+        return `${namedEmployee.name} (${namedEmployee.id}) is marked ${namedEmployee.attendance.toLowerCase()} today. Check-in: ${namedEmployee.checkIn}. Check-out: ${namedEmployee.checkOut}.`;
+      }
+
+      if (
+        text.includes("department") ||
+        text.includes("role") ||
+        text.includes("job")
+      ) {
+        return `${namedEmployee.name} works as ${namedEmployee.role} in ${namedEmployee.department}.`;
+      }
+
+      if (
+        text.includes("salary") ||
+        text.includes("pay") ||
+        text.includes("payroll")
+      ) {
+        const record = payroll.find(
+          (item: {
+            employeeId?: string;
+          }) =>
+            item.employeeId ===
+            namedEmployee.id,
+        );
+
+        if (!record) {
+          return `I don't have a payroll record yet for ${namedEmployee.name}. Open HR Payroll to create one.`;
+        }
+
+        const basic = Number(
+          record.basic || 0,
+        );
+        const allowance = Number(
+          record.allowance || 0,
+        );
+        const bonus = Number(
+          record.bonus || 0,
+        );
+        const deductions = Number(
+          record.deductions || 0,
+        );
+        const net = Math.max(
+          0,
+          basic +
+            allowance +
+            bonus -
+            deductions,
+        );
+
+        return `${namedEmployee.name}'s current payroll: basic ${money(basic)}, allowances/bonus ${money(allowance + bonus)}, deductions ${money(deductions)}, and net salary ${money(net)}.`;
+      }
+    }
+
+    // Pending leave
     if (
       text.includes("pending") &&
       text.includes("leave")
@@ -1707,51 +2633,94 @@ function AIAssistant({
     }
 
     if (
-      text.includes("attendance") ||
-      text.includes("present")
+      text.includes("approved") &&
+      text.includes("leave")
     ) {
-      const present = employees.filter(
-        (employee) =>
-          employee.attendance === "Present",
-      ).length;
-
-      return `The organization has ${present} of ${employees.length} employees present today.`;
-    }
-
-    if (text.includes("employee")) {
-      return `DayFlow currently has ${employees.length} employees in the organization.`;
+      return `There are ${approved.length} approved leave requests.`;
     }
 
     if (
-      text.includes("payroll") ||
-      text.includes("salary")
+      text.includes("rejected") &&
+      text.includes("leave")
     ) {
-      return "Your demo net salary is ₹31,000 for August 2026.";
+      return `There are ${rejected.length} rejected leave requests.`;
     }
 
-    if (text.includes("leave")) {
-      return `There are ${leaveRequests.length} leave requests in the demo data.`;
+    // Payroll summary from the actual HR Payroll localStorage data
+    if (
+      text.includes("total payroll") ||
+      text.includes("payroll total") ||
+      text.includes("monthly payroll")
+    ) {
+      if (payroll.length === 0) {
+        return "No payroll records are available yet. Open HR Payroll to initialize the payroll data.";
+      }
+
+      const total = employees.reduce(
+        (sum, employee) => {
+          const record = payroll.find(
+            (item: {
+              employeeId?: string;
+              basic?: number;
+              allowance?: number;
+              bonus?: number;
+              deductions?: number;
+            }) =>
+              item.employeeId ===
+              employee.id,
+          );
+
+          if (!record) return sum;
+
+          return (
+            sum +
+            Math.max(
+              0,
+              Number(record.basic || 0) +
+                Number(
+                  record.allowance || 0,
+                ) +
+                Number(record.bonus || 0) -
+                Number(
+                  record.deductions || 0,
+                ),
+            )
+          );
+        },
+        0,
+      );
+
+      return `The current monthly net payroll is ${money(total)} across ${employees.length} employees.`;
     }
 
-    return "I can answer questions about attendance, leave, payroll, salary and employees.";
+    // HR summary
+    if (
+      text.includes("hr summary") ||
+      text.includes("today's summary") ||
+      text.includes("todays summary") ||
+      text.includes("summary")
+    ) {
+      return `Today's HR summary: ${employees.length} employees, ${present.length} present, ${absent.length} absent, ${onLeave.length} on leave, ${attendanceRate}% attendance, and ${pending.length} pending leave request${pending.length === 1 ? "" : "s"}.`;
+    }
+
+    return "I can answer live questions about employees, attendance, departments, leave requests and payroll. Try: 'Who is absent today?', 'What is the attendance rate?', 'Who has pending leave?', or 'What is the total payroll?'";
   };
 
   const sendMessage = () => {
-    if (!input.trim()) {
-      return;
-    }
+    if (!input.trim()) return;
 
     const question = input.trim();
+    const id = Date.now();
 
     setMessages((current) => [
       ...current,
       {
-        id: Date.now(),
+        id,
         sender: "user",
         text: question,
       },
       {
-        id: Date.now() + 1,
+        id: id + 1,
         sender: "ai",
         text: answer(question),
       },
@@ -1760,15 +2729,53 @@ function AIAssistant({
     setInput("");
   };
 
+  const quickQuestions = [
+    "How many employees?",
+    "Who is absent today?",
+    "What is the attendance rate?",
+    "Who has pending leave?",
+    "What is the total payroll?",
+    "Give me today's HR summary",
+  ];
+
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-5xl">
       <PageHeader
         eyebrow="DAYFLOW AI"
         title="AI Assistant"
-        description="Ask questions about your HR workspace."
+        description="Ask questions using your live HR workspace data."
       />
 
-      <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {quickQuestions.map((question) => (
+          <button
+            key={question}
+            onClick={() => {
+              setInput(question);
+            }}
+            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+          >
+            {question}
+          </button>
+        ))}
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <Sparkles size={19} />
+          </div>
+
+          <div>
+            <p className="font-bold text-slate-900">
+              DayFlow AI
+            </p>
+            <p className="text-xs text-emerald-600">
+              Live HR data connected
+            </p>
+          </div>
+        </div>
+
         <div className="h-[480px] space-y-4 overflow-y-auto p-6">
           {messages.map((message) => (
             <div
@@ -1780,7 +2787,7 @@ function AIAssistant({
               }`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                className={`max-w-[82%] whitespace-pre-line rounded-2xl px-4 py-3 text-sm leading-6 ${
                   message.sender === "user"
                     ? "bg-slate-950 text-white"
                     : "bg-slate-100 text-slate-700"
@@ -1792,7 +2799,7 @@ function AIAssistant({
           ))}
         </div>
 
-        <div className="border-t p-4">
+        <div className="border-t border-slate-100 p-4">
           <div className="flex gap-3">
             <input
               value={input}
@@ -1804,13 +2811,13 @@ function AIAssistant({
                   sendMessage();
                 }
               }}
-              className="flex-1 rounded-xl border px-4 py-3 outline-none focus:border-indigo-500"
-              placeholder="Ask: Who has pending leave?"
+              className="flex-1 rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-500"
+              placeholder="Ask DayFlow AI about your HR data..."
             />
 
             <button
               onClick={sendMessage}
-              className="rounded-xl bg-indigo-600 px-5 font-semibold text-white"
+              className="rounded-xl bg-indigo-600 px-5 font-semibold text-white transition hover:bg-indigo-700"
             >
               Send
             </button>
@@ -1828,9 +2835,11 @@ function AIAssistant({
 function EmployeesPage({
   employees,
   onEmployeesChange,
+  leaveRequests,
 }: {
   employees: HREmployee[];
   onEmployeesChange: (employees: HREmployee[]) => void;
+  leaveRequests: LeaveRequest[];
 }) {
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("All");
@@ -1976,7 +2985,7 @@ function EmployeesPage({
 
       <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] text-left">
+          <table className="dayflow-table w-full min-w-[1000px] text-left">
             <thead className="bg-slate-50">
               <tr className="text-xs uppercase tracking-wider text-slate-400">
                 <th className="px-6 py-4">Employee</th>
@@ -2050,7 +3059,11 @@ function EmployeesPage({
       </div>
 
       {selected && (
-        <EmployeeModal employee={selected} onClose={() => setSelected(null)} />
+        <EmployeeModal
+          employee={selected}
+          leaveRequests={leaveRequests}
+          onClose={() => setSelected(null)}
+        />
       )}
 
       {showForm && (
@@ -2074,52 +3087,467 @@ function EmployeesPage({
 
 function EmployeeModal({
   employee,
+  leaveRequests,
   onClose,
 }: {
   employee: HREmployee;
+  leaveRequests: LeaveRequest[];
   onClose: () => void;
 }) {
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "leave" | "payroll"
+  >("overview");
+
+  const employeeLeaves = leaveRequests.filter(
+    (request) =>
+      request.employeeId === employee.id,
+  );
+
+  const [payrollRecord, setPayrollRecord] =
+    useState<PayrollRecord | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved =
+        localStorage.getItem(
+          "dayflow_payroll",
+        );
+
+      if (!saved) {
+        setPayrollRecord(null);
+        return;
+      }
+
+      const records = JSON.parse(saved);
+
+      if (Array.isArray(records)) {
+        const record = records.find(
+          (item) =>
+            item?.employeeId === employee.id,
+        );
+
+        setPayrollRecord(
+          record ?? null,
+        );
+      }
+    } catch {
+      setPayrollRecord(null);
+    }
+  }, [employee.id]);
+
+  const money = (value: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const gross =
+    payrollRecord
+      ? payrollRecord.basic +
+        payrollRecord.allowance +
+        payrollRecord.bonus
+      : 0;
+
+  const net =
+    payrollRecord
+      ? Math.max(
+          0,
+          gross -
+            payrollRecord.deductions,
+        )
+      : 0;
+
+  const attendanceScore =
+    employee.attendance === "Present"
+      ? 100
+      : employee.attendance === "On Leave"
+        ? 80
+        : 0;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-100 p-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">Employee Profile</p>
-            <h2 className="mt-1 text-xl font-bold text-slate-950">{employee.name}</h2>
-          </div>
-          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-600 text-xl font-bold text-white">
-              {getInitials(employee.name)}
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-md">
+      <div className="dayflow-card w-full max-w-3xl overflow-hidden rounded-[2rem] border bg-white shadow-2xl">
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-indigo-900 px-6 py-7 text-white sm:px-8">
+          <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl" />
+          <div className="absolute -bottom-20 left-20 h-40 w-40 rounded-full bg-violet-400/15 blur-3xl" />
+
+          <div className="relative flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-2xl font-bold">{employee.name}</h3>
-              <p className="mt-1 text-sm text-slate-500">{employee.role}</p>
-              <div className="mt-2"><AttendanceStatus status={employee.attendance} /></div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">
+                EMPLOYEE PROFILE
+              </p>
+
+              <div className="mt-4 flex items-center gap-4">
+                <div className="dayflow-avatar flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-bold text-white ring-4 ring-white/10">
+                  {getInitials(
+                    employee.name,
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    {employee.name}
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-300">
+                    {employee.role}
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-200">
+                      {employee.department}
+                    </span>
+
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-200">
+                      {employee.id}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <button
+              onClick={onClose}
+              className="rounded-xl bg-white/10 p-2 text-slate-300 transition hover:bg-white/20 hover:text-white"
+              aria-label="Close employee profile"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2">
-            <SimpleRow label="Employee ID" value={employee.id} />
-            <SimpleRow label="Department" value={employee.department} />
-            <SimpleRow label="Role" value={employee.role} />
-            <SimpleRow label="Check In" value={employee.checkIn} />
-            <SimpleRow label="Check Out" value={employee.checkOut} />
-            <SimpleRow label="Attendance" value={employee.attendance} />
+        </div>
+
+        <div className="border-b border-slate-100 bg-white px-4 sm:px-8">
+          <div className="flex gap-1 overflow-x-auto">
+            {[
+              ["overview", "Overview"],
+              ["leave", "Leave History"],
+              ["payroll", "Payroll"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                onClick={() =>
+                  setActiveTab(
+                    value as
+                      | "overview"
+                      | "leave"
+                      | "payroll",
+                  )
+                }
+                className={`border-b-2 px-4 py-4 text-sm font-bold transition ${
+                  activeTab === value
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-slate-400 hover:text-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-          <button onClick={onClose} className="mt-7 w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-indigo-600">Close</button>
+        </div>
+
+        <div className="max-h-[62vh] overflow-y-auto p-6 sm:p-8">
+          {activeTab === "overview" && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                      Attendance
+                    </p>
+                    <CheckCircle2
+                      size={18}
+                      className="text-indigo-500"
+                    />
+                  </div>
+
+                  <p className="mt-3 text-3xl font-black text-slate-900">
+                    {attendanceScore}%
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Based on today's status
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                      Net Pay
+                    </p>
+                    <DollarSign
+                      size={18}
+                      className="text-emerald-600"
+                    />
+                  </div>
+
+                  <p className="mt-3 text-2xl font-black text-slate-900">
+                    {payrollRecord
+                      ? money(net)
+                      : "—"}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Current payroll record
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-wider text-violet-600">
+                      Leave
+                    </p>
+                    <CalendarDays
+                      size={18}
+                      className="text-violet-600"
+                    />
+                  </div>
+
+                  <p className="mt-3 text-3xl font-black text-slate-900">
+                    {employeeLeaves.length}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Recorded requests
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  Current Status
+                </h3>
+
+                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <AttendanceStatus
+                    status={
+                      employee.attendance
+                    }
+                  />
+
+                  <span className="text-sm text-slate-500">
+                    {employee.attendance ===
+                    "Present"
+                      ? `Checked in at ${employee.checkIn}`
+                      : employee.attendance ===
+                          "On Leave"
+                        ? "Employee is currently on leave"
+                        : "No attendance recorded today"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-7">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  Employee Information
+                </h3>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <SimpleRow
+                    label="Employee ID"
+                    value={employee.id}
+                  />
+                  <SimpleRow
+                    label="Department"
+                    value={employee.department}
+                  />
+                  <SimpleRow
+                    label="Role"
+                    value={employee.role}
+                  />
+                  <SimpleRow
+                    label="Check In"
+                    value={employee.checkIn}
+                  />
+                  <SimpleRow
+                    label="Check Out"
+                    value={employee.checkOut}
+                  />
+                  <SimpleRow
+                    label="Attendance"
+                    value={employee.attendance}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === "leave" && (
+            <div>
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                    LEAVE HISTORY
+                  </p>
+                  <h3 className="mt-1 text-xl font-bold text-slate-900">
+                    Leave Requests
+                  </h3>
+                </div>
+
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                  {employeeLeaves.length} request
+                  {employeeLeaves.length === 1
+                    ? ""
+                    : "s"}
+                </span>
+              </div>
+
+              {employeeLeaves.length === 0 ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center">
+                  <CalendarDays
+                    size={30}
+                    className="mx-auto text-slate-300"
+                  />
+                  <p className="mt-3 font-bold text-slate-600">
+                    No leave history
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    This employee has no recorded leave requests.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-6 space-y-3">
+                  {employeeLeaves.map(
+                    (request) => (
+                      <div
+                        key={request.id}
+                        className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-bold text-slate-800">
+                              {request.type}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {request.from} →{" "}
+                              {request.to}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
+                              request.status ===
+                              "Approved"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : request.status ===
+                                    "Rejected"
+                                  ? "bg-red-50 text-red-600"
+                                  : "bg-amber-50 text-amber-600"
+                            }`}
+                          >
+                            {request.status}
+                          </span>
+                        </div>
+
+                        {request.reason && (
+                          <p className="mt-3 rounded-xl bg-white p-3 text-xs leading-5 text-slate-500">
+                            {request.reason}
+                          </p>
+                        )}
+                      </div>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "payroll" && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-500">
+                PAYROLL PROFILE
+              </p>
+
+              <h3 className="mt-1 text-xl font-bold text-slate-900">
+                Compensation Overview
+              </h3>
+
+              {!payrollRecord ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center">
+                  <DollarSign
+                    size={30}
+                    className="mx-auto text-slate-300"
+                  />
+                  <p className="mt-3 font-bold text-slate-600">
+                    No payroll record found
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-2xl bg-slate-950 p-5 text-white">
+                      <p className="text-xs font-semibold text-slate-400">
+                        Gross Pay
+                      </p>
+                      <p className="mt-2 text-2xl font-black">
+                        {money(gross)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-emerald-600 p-5 text-white">
+                      <p className="text-xs font-semibold text-emerald-100">
+                        Net Pay
+                      </p>
+                      <p className="mt-2 text-2xl font-black">
+                        {money(net)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-amber-500 p-5 text-white">
+                      <p className="text-xs font-semibold text-amber-100">
+                        Deductions
+                      </p>
+                      <p className="mt-2 text-2xl font-black">
+                        {money(
+                          payrollRecord.deductions,
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <SimpleRow
+                      label="Basic Salary"
+                      value={money(
+                        payrollRecord.basic,
+                      )}
+                    />
+                    <SimpleRow
+                      label="Allowance"
+                      value={money(
+                        payrollRecord.allowance,
+                      )}
+                    />
+                    <SimpleRow
+                      label="Bonus"
+                      value={money(
+                        payrollRecord.bonus,
+                      )}
+                    />
+                    <SimpleRow
+                      label="Payroll Status"
+                      value={payrollRecord.status}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-100 bg-slate-50/70 p-5 sm:px-8">
+          <button
+            onClick={onClose}
+            className="dayflow-primary w-full rounded-xl px-5 py-3 font-bold text-white"
+          >
+            Close Profile
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-/* =========================================================
-   ADD / EDIT EMPLOYEE
-========================================================= */
 
 function EmployeeFormModal({
   employee,
@@ -2332,9 +3760,17 @@ function LeaveApprovalsPage({
 
 function HRAttendancePage({
   employees,
+  onEmployeesChange,
 }: {
   employees: HREmployee[];
+  onEmployeesChange: (
+    employees: HREmployee[],
+  ) => void;
 }) {
+  const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
   const present = employees.filter(
     (employee) =>
       employee.attendance === "Present",
@@ -2350,93 +3786,374 @@ function HRAttendancePage({
       employee.attendance === "On Leave",
   ).length;
 
+  const total = employees.length;
+  const attendanceRate =
+    total === 0
+      ? 0
+      : Math.round((present / total) * 100);
+
+  const departments = [
+    "All",
+    ...Array.from(
+      new Set(
+        employees.map(
+          (employee) => employee.department,
+        ),
+      ),
+    ),
+  ];
+
+  const filteredEmployees = employees.filter(
+    (employee) => {
+      const query = search
+        .trim()
+        .toLowerCase();
+
+      const matchesSearch =
+        !query ||
+        `${employee.name} ${employee.id} ${employee.role} ${employee.department}`
+          .toLowerCase()
+          .includes(query);
+
+      const matchesDepartment =
+        department === "All" ||
+        employee.department === department;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        employee.attendance === statusFilter;
+
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesStatus
+      );
+    },
+  );
+
+  const updateEmployee = (
+    employeeId: string,
+    changes: Partial<HREmployee>,
+  ) => {
+    const updated = employees.map(
+      (employee) =>
+        employee.id === employeeId
+          ? {
+              ...employee,
+              ...changes,
+            }
+          : employee,
+    );
+
+    onEmployeesChange(updated);
+  };
+
+  const getCurrentTime = () =>
+    new Date().toLocaleTimeString(
+      "en-IN",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      },
+    );
+
+  const markPresent = (
+    employee: HREmployee,
+  ) => {
+    updateEmployee(employee.id, {
+      attendance: "Present",
+      checkIn:
+        employee.checkIn === "--:--"
+          ? getCurrentTime()
+          : employee.checkIn,
+    });
+  };
+
+  const markAbsent = (
+    employee: HREmployee,
+  ) => {
+    updateEmployee(employee.id, {
+      attendance: "Absent",
+      checkIn: "--:--",
+      checkOut: "--:--",
+    });
+  };
+
+  const markLeave = (
+    employee: HREmployee,
+  ) => {
+    updateEmployee(employee.id, {
+      attendance: "On Leave",
+      checkIn: "--:--",
+      checkOut: "--:--",
+    });
+  };
+
+  const checkIn = (
+    employee: HREmployee,
+  ) => {
+    updateEmployee(employee.id, {
+      attendance: "Present",
+      checkIn: getCurrentTime(),
+    });
+  };
+
+  const checkOut = (
+    employee: HREmployee,
+  ) => {
+    updateEmployee(employee.id, {
+      attendance: "Present",
+      checkOut: getCurrentTime(),
+    });
+  };
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
         eyebrow="HR ADMINISTRATION"
         title="HR Attendance"
-        description="Monitor today's employee attendance."
+        description="Monitor and manage today's employee attendance in real time."
       />
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          icon={<Users size={20} />}
+          label="Total Employees"
+          value={String(total)}
+          description="Active workforce"
+        />
+
         <MetricCard
           icon={<CheckCircle2 size={20} />}
           label="Present"
           value={String(present)}
-          description="Listed employees"
+          description="Marked present"
         />
 
         <MetricCard
           icon={<XCircle size={20} />}
           label="Absent"
           value={String(absent)}
-          description="Listed employees"
+          description="Marked absent"
         />
 
         <MetricCard
           icon={<CalendarDays size={20} />}
-          label="On Leave"
-          value={String(onLeave)}
-          description="Listed employees"
+          label="Attendance Rate"
+          value={`${attendanceRate}%`}
+          description={`${onLeave} employee${onLeave === 1 ? "" : "s"} on leave`}
         />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm">
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+
+            <input
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              placeholder="Search employee, ID, role or department..."
+              className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-500"
+            />
+          </div>
+
+          <select
+            value={department}
+            onChange={(event) =>
+              setDepartment(event.target.value)
+            }
+            className="rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+          >
+            {departments.map((item) => (
+              <option key={item} value={item}>
+                {item === "All"
+                  ? "All Departments"
+                  : item}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value)
+            }
+            className="rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+          >
+            <option value="All">
+              All Status
+            </option>
+            <option value="Present">
+              Present
+            </option>
+            <option value="Absent">
+              Absent
+            </option>
+            <option value="On Leave">
+              On Leave
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-2 border-b border-slate-100 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-slate-950">
+              Today's Attendance
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-400">
+              {filteredEmployees.length} employee
+              {filteredEmployees.length === 1 ? "" : "s"} shown
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            Live employee data
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[750px] text-left">
+          <table className="dayflow-table w-full min-w-[1150px] text-left">
             <thead className="bg-slate-50">
-              <tr className="text-xs uppercase text-slate-400">
-                <th className="px-6 py-4">
-                  Employee
-                </th>
-
-                <th className="px-6 py-4">
-                  Department
-                </th>
-
-                <th className="px-6 py-4">
-                  Status
-                </th>
-
-                <th className="px-6 py-4">
-                  Check In
-                </th>
-
-                <th className="px-6 py-4">
-                  Check Out
-                </th>
+              <tr className="text-xs uppercase tracking-wider text-slate-400">
+                <th className="px-6 py-4">Employee</th>
+                <th className="px-6 py-4">Department</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Check In</th>
+                <th className="px-6 py-4">Check Out</th>
+                <th className="px-6 py-4">Attendance Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {employees.map((employee) => (
-                <tr
-                  key={employee.id}
-                  className="border-t"
-                >
-                  <td className="px-6 py-4 font-semibold">
-                    {employee.name}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    {employee.department}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <AttendanceStatus
-                      status={employee.attendance}
+              {filteredEmployees.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-16 text-center"
+                  >
+                    <Users
+                      size={34}
+                      className="mx-auto text-slate-300"
                     />
-                  </td>
 
-                  <td className="px-6 py-4 text-sm">
-                    {employee.checkIn}
-                  </td>
+                    <p className="mt-3 font-bold text-slate-700">
+                      No employees found
+                    </p>
 
-                  <td className="px-6 py-4 text-sm">
-                    {employee.checkOut}
+                    <p className="mt-1 text-sm text-slate-400">
+                      Try changing your search or filters.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredEmployees.map(
+                  (employee) => (
+                    <tr
+                      key={employee.id}
+                      className="border-t border-slate-100 transition hover:bg-slate-50"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-600">
+                            {getInitials(employee.name)}
+                          </div>
+
+                          <div>
+                            <p className="font-semibold text-slate-800">
+                              {employee.name}
+                            </p>
+
+                            <p className="text-xs text-slate-400">
+                              {employee.id}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-5 text-sm text-slate-600">
+                        {employee.department}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <AttendanceStatus
+                          status={employee.attendance}
+                        />
+                      </td>
+
+                      <td className="px-6 py-5 text-sm font-medium text-slate-600">
+                        {employee.checkIn}
+                      </td>
+
+                      <td className="px-6 py-5 text-sm font-medium text-slate-600">
+                        {employee.checkOut}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() =>
+                              checkIn(employee)
+                            }
+                            className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-600 transition hover:bg-emerald-100"
+                          >
+                            Check In
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              checkOut(employee)
+                            }
+                            disabled={
+                              employee.checkIn === "--:--"
+                            }
+                            className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-600 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Check Out
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              markPresent(employee)
+                            }
+                            className="rounded-lg border border-emerald-100 px-3 py-2 text-xs font-bold text-emerald-600 transition hover:bg-emerald-50"
+                          >
+                            Present
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              markAbsent(employee)
+                            }
+                            className="rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-red-50"
+                          >
+                            Absent
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              markLeave(employee)
+                            }
+                            className="rounded-lg border border-amber-100 px-3 py-2 text-xs font-bold text-amber-600 transition hover:bg-amber-50"
+                          >
+                            Leave
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ),
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -2454,134 +4171,882 @@ function HRPayrollPage({
 }: {
   employees: HREmployee[];
 }) {
-  const salaryByEmployee: Record<string, [number, number]> = {
-    EMP001: [36000, 31000],
-    EMP002: [42000, 36500],
-    EMP003: [38000, 33200],
-    EMP004: [40000, 34800],
-    EMP005: [32000, 28400],
-    EMP006: [39000, 33800],
-  };
-
-  const rows = employees.map((employee) => {
-    const [gross, net] =
-      salaryByEmployee[employee.id] ?? [35000, 30000];
-
-    return {
-      employee,
-      gross,
-      net,
-    };
+  const defaultRecord = (
+    employee: HREmployee,
+  ): PayrollRecord => ({
+    employeeId: employee.id,
+    basic: 45000,
+    allowance: 6000,
+    bonus: 0,
+    deductions: 2500,
+    status: "Processed",
   });
 
-  const totalNet = rows.reduce(
-    (sum, row) => sum + row.net,
-    0,
-  );
+  const [records, setRecords] =
+    useState<PayrollRecord[]>(() => {
+      try {
+        const saved =
+          localStorage.getItem(
+            "dayflow_payroll",
+          );
+
+        if (saved) {
+          const parsed = JSON.parse(saved);
+
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      } catch {
+        // Fall back to generated records.
+      }
+
+      return employees.map(defaultRecord);
+    });
+
+  const [search, setSearch] =
+    useState("");
+
+  const [department, setDepartment] =
+    useState("All");
+
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<HREmployee | null>(null);
+
+  const [editing, setEditing] =
+    useState<PayrollRecord | null>(null);
+
+  const [showEditor, setShowEditor] =
+    useState(false);
+
+  // Keep payroll records synchronized with
+  // the central employee data.
+  useEffect(() => {
+    setRecords((current) => {
+      const validIds = new Set(
+        employees.map(
+          (employee) => employee.id,
+        ),
+      );
+
+      const existing = current.filter(
+        (record) =>
+          validIds.has(record.employeeId),
+      );
+
+      const existingIds = new Set(
+        existing.map(
+          (record) => record.employeeId,
+        ),
+      );
+
+      const missing = employees
+        .filter(
+          (employee) =>
+            !existingIds.has(employee.id),
+        )
+        .map(defaultRecord);
+
+      const next = [
+        ...existing,
+        ...missing,
+      ];
+
+      localStorage.setItem(
+        "dayflow_payroll",
+        JSON.stringify(next),
+      );
+
+      return next;
+    });
+  }, [employees]);
+
+  const saveRecords = (
+    next: PayrollRecord[],
+  ) => {
+    setRecords(next);
+
+    localStorage.setItem(
+      "dayflow_payroll",
+      JSON.stringify(next),
+    );
+  };
+
+  const departments = [
+    "All",
+    ...Array.from(
+      new Set(
+        employees.map(
+          (employee) => employee.department,
+        ),
+      ),
+    ),
+  ];
+
+  const getRecord = (
+    employeeId: string,
+  ) =>
+    records.find(
+      (record) =>
+        record.employeeId === employeeId,
+    ) ?? {
+      employeeId,
+      basic: 45000,
+      allowance: 6000,
+      bonus: 0,
+      deductions: 2500,
+      status: "Pending" as const,
+    };
+
+  const getGross = (
+    record: PayrollRecord,
+  ) =>
+    record.basic +
+    record.allowance +
+    record.bonus;
+
+  const getNet = (
+    record: PayrollRecord,
+  ) =>
+    Math.max(
+      0,
+      getGross(record) -
+        record.deductions,
+    );
+
+  const totalPayroll =
+    employees.reduce(
+      (sum, employee) =>
+        sum +
+        getNet(
+          getRecord(employee.id),
+        ),
+      0,
+    );
+
+  const totalGross =
+    employees.reduce(
+      (sum, employee) =>
+        sum +
+        getGross(
+          getRecord(employee.id),
+        ),
+      0,
+    );
+
+  const totalDeductions =
+    employees.reduce(
+      (sum, employee) =>
+        sum +
+        getRecord(employee.id)
+          .deductions,
+      0,
+    );
+
+  const processedCount =
+    employees.filter(
+      (employee) =>
+        getRecord(employee.id)
+          .status === "Processed",
+    ).length;
+
+  const filteredEmployees =
+    employees.filter((employee) => {
+      const query =
+        search.trim().toLowerCase();
+
+      const matchesSearch =
+        !query ||
+        `${employee.name} ${employee.id} ${employee.role} ${employee.department}`
+          .toLowerCase()
+          .includes(query);
+
+      const matchesDepartment =
+        department === "All" ||
+        employee.department === department;
+
+      return (
+        matchesSearch &&
+        matchesDepartment
+      );
+    });
+
+  const formatCurrency = (
+    value: number,
+  ) =>
+    new Intl.NumberFormat(
+      "en-IN",
+      {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      },
+    ).format(value);
+
+  const openEditor = (
+    employee: HREmployee,
+  ) => {
+    setEditing(
+      getRecord(employee.id),
+    );
+
+    setSelectedEmployee(employee);
+    setShowEditor(true);
+  };
+
+  const markProcessed = (
+    employeeId: string,
+  ) => {
+    const next = records.map(
+      (record) =>
+        record.employeeId === employeeId
+          ? {
+              ...record,
+              status: "Processed" as const,
+            }
+          : record,
+    );
+
+    saveRecords(next);
+  };
 
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
         eyebrow="HR ADMINISTRATION"
         title="HR Payroll"
-        description="Review organization payroll processing."
+        description="Manage employee compensation, deductions and monthly payroll using the central workforce data."
       />
 
+      {/* PAYROLL SUMMARY */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          icon={<Users size={20} />}
-          label="Employees"
-          value={String(employees.length)}
-          description="Payroll workforce"
+          icon={<Banknote size={20} />}
+          label="Net Payroll"
+          value={formatCurrency(totalPayroll)}
+          description="Current monthly payroll"
+        />
+
+        <MetricCard
+          icon={<TrendingUp size={20} />}
+          label="Gross Payroll"
+          value={formatCurrency(totalGross)}
+          description="Before deductions"
+        />
+
+        <MetricCard
+          icon={<Receipt size={20} />}
+          label="Deductions"
+          value={formatCurrency(totalDeductions)}
+          description="Total deductions"
         />
 
         <MetricCard
           icon={<CheckCircle2 size={20} />}
           label="Processed"
-          value={String(employees.length)}
-          description="Current employee records"
-        />
-
-        <MetricCard
-          icon={<Wallet size={20} />}
-          label="Monthly Net"
-          value={`₹${totalNet.toLocaleString("en-IN")}`}
-          description="Estimated payroll"
-        />
-
-        <MetricCard
-          icon={<Wallet size={20} />}
-          label="Period"
-          value="August"
-          description="2026"
+          value={`${processedCount}/${employees.length}`}
+          description="Payroll records processed"
         />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b p-6">
-          <div>
-            <h3 className="font-bold">
-              August 2026 Payroll
-            </h3>
+      {/* MONTH + FILTERS */}
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="flex-1">
+            <div className="relative">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
 
-            <p className="text-sm text-slate-400">
-              Salary processing overview
-            </p>
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Search employee, ID, role or department..."
+                className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-indigo-500"
+              />
+            </div>
           </div>
 
-          <button className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">
-            Process Payroll
-          </button>
+          <select
+            value={department}
+            onChange={(event) =>
+              setDepartment(event.target.value)
+            }
+            className="rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+          >
+            {departments.map((item) => (
+              <option key={item} value={item}>
+                {item === "All"
+                  ? "All Departments"
+                  : item}
+              </option>
+            ))}
+          </select>
+
+          <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+            August 2026 Payroll
+          </div>
+        </div>
+      </div>
+
+      {/* PAYROLL TABLE */}
+      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="font-bold text-slate-950">
+                Employee Payroll
+              </h3>
+
+              <p className="mt-1 text-sm text-slate-400">
+                {filteredEmployees.length} employee
+                {filteredEmployees.length === 1
+                  ? ""
+                  : "s"} shown
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                const csvRows = [
+                  [
+                    "Employee ID",
+                    "Employee",
+                    "Department",
+                    "Basic",
+                    "Allowance",
+                    "Bonus",
+                    "Deductions",
+                    "Net Salary",
+                    "Status",
+                  ],
+                  ...filteredEmployees.map(
+                    (employee) => {
+                      const record =
+                        getRecord(
+                          employee.id,
+                        );
+
+                      return [
+                        employee.id,
+                        employee.name,
+                        employee.department,
+                        record.basic,
+                        record.allowance,
+                        record.bonus,
+                        record.deductions,
+                        getNet(record),
+                        record.status,
+                      ];
+                    },
+                  ),
+                ];
+
+                const csv = csvRows
+                  .map((row) =>
+                    row
+                      .map((cell) =>
+                        `"${String(cell).replaceAll(
+                          '"',
+                          '""',
+                        )}"`,
+                      )
+                      .join(","),
+                  )
+                  .join("\n");
+
+                const blob = new Blob(
+                  [csv],
+                  {
+                    type: "text/csv;charset=utf-8;",
+                  },
+                );
+
+                const url =
+                  URL.createObjectURL(
+                    blob,
+                  );
+
+                const anchor =
+                  document.createElement(
+                    "a",
+                  );
+
+                anchor.href = url;
+                anchor.download =
+                  "dayflow-payroll-august-2026.csv";
+
+                anchor.click();
+
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
+            >
+              <Download size={16} />
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left">
+          <table className="dayflow-table w-full min-w-[1150px] text-left">
             <thead className="bg-slate-50">
-              <tr className="text-xs uppercase text-slate-400">
-                <th className="px-6 py-4">Employee</th>
-                <th className="px-6 py-4">Department</th>
-                <th className="px-6 py-4">Gross</th>
-                <th className="px-6 py-4">Net</th>
-                <th className="px-6 py-4">Status</th>
+              <tr className="text-xs uppercase tracking-wider text-slate-400">
+                <th className="px-6 py-4">
+                  Employee
+                </th>
+
+                <th className="px-6 py-4">
+                  Department
+                </th>
+
+                <th className="px-6 py-4">
+                  Basic
+                </th>
+
+                <th className="px-6 py-4">
+                  Allowances
+                </th>
+
+                <th className="px-6 py-4">
+                  Deductions
+                </th>
+
+                <th className="px-6 py-4">
+                  Net Salary
+                </th>
+
+                <th className="px-6 py-4">
+                  Status
+                </th>
+
+                <th className="px-6 py-4">
+                  Action
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.employee.id} className="border-t">
-                  <td className="px-6 py-5 font-semibold">
-                    {row.employee.name}
-                  </td>
-
-                  <td className="px-6 py-5 text-sm text-slate-500">
-                    {row.employee.department}
-                  </td>
-
-                  <td className="px-6 py-5 text-sm">
-                    ₹{row.gross.toLocaleString("en-IN")}
-                  </td>
-
-                  <td className="px-6 py-5 font-bold">
-                    ₹{row.net.toLocaleString("en-IN")}
-                  </td>
-
-                  <td className="px-6 py-5">
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                      Processed
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {rows.length === 0 && (
+              {filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">
-                    No employees available for payroll.
+                  <td
+                    colSpan={8}
+                    className="px-6 py-16 text-center"
+                  >
+                    <Wallet
+                      size={34}
+                      className="mx-auto text-slate-300"
+                    />
+
+                    <p className="mt-3 font-bold text-slate-700">
+                      No payroll records found
+                    </p>
                   </td>
                 </tr>
+              ) : (
+                filteredEmployees.map(
+                  (employee) => {
+                    const record =
+                      getRecord(
+                        employee.id,
+                      );
+
+                    return (
+                      <tr
+                        key={employee.id}
+                        className="border-t border-slate-100 transition hover:bg-slate-50"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-600">
+                              {getInitials(
+                                employee.name,
+                              )}
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-slate-800">
+                                {employee.name}
+                              </p>
+
+                              <p className="text-xs text-slate-400">
+                                {employee.id}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-5 text-sm text-slate-600">
+                          {employee.department}
+                        </td>
+
+                        <td className="px-6 py-5 text-sm font-medium text-slate-600">
+                          {formatCurrency(
+                            record.basic,
+                          )}
+                        </td>
+
+                        <td className="px-6 py-5 text-sm font-medium text-emerald-600">
+                          {formatCurrency(
+                            record.allowance +
+                              record.bonus,
+                          )}
+                        </td>
+
+                        <td className="px-6 py-5 text-sm font-medium text-red-600">
+                          -
+                          {formatCurrency(
+                            record.deductions,
+                          )}
+                        </td>
+
+                        <td className="px-6 py-5 text-sm font-bold text-slate-950">
+                          {formatCurrency(
+                            getNet(record),
+                          )}
+                        </td>
+
+                        <td className="px-6 py-5">
+                          <span
+                            className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                              record.status ===
+                              "Processed"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : "bg-amber-50 text-amber-600"
+                            }`}
+                          >
+                            {record.status}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-5">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() =>
+                                openEditor(
+                                  employee,
+                                )
+                              }
+                              className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100"
+                            >
+                              Edit
+                            </button>
+
+                            {record.status !==
+                              "Processed" && (
+                              <button
+                                onClick={() =>
+                                  markProcessed(
+                                    employee.id,
+                                  )
+                                }
+                                className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100"
+                              >
+                                Process
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  },
+                )
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* PAYROLL EDITOR */}
+      {showEditor &&
+        selectedEmployee &&
+        editing && (
+          <PayrollEditorModal
+            employee={selectedEmployee}
+            record={editing}
+            onClose={() => {
+              setShowEditor(false);
+              setSelectedEmployee(null);
+              setEditing(null);
+            }}
+            onSave={(next) => {
+              saveRecords(
+                records.map(
+                  (record) =>
+                    record.employeeId ===
+                    next.employeeId
+                      ? next
+                      : record,
+                ),
+              );
+
+              setShowEditor(false);
+              setSelectedEmployee(null);
+              setEditing(null);
+            }}
+          />
+        )}
+    </div>
+  );
+}
+
+function PayrollEditorModal({
+  employee,
+  record,
+  onClose,
+  onSave,
+}: {
+  employee: HREmployee;
+  record: PayrollRecord;
+  onClose: () => void;
+  onSave: (record: PayrollRecord) => void;
+}) {
+  const [basic, setBasic] =
+    useState<string>(String(record.basic));
+
+  const [allowance, setAllowance] =
+    useState<string>(
+      String(record.allowance),
+    );
+
+  const [bonus, setBonus] =
+    useState<string>(String(record.bonus));
+
+  const [deductions, setDeductions] =
+    useState<string>(
+      String(record.deductions),
+    );
+
+  const [status, setStatus] =
+    useState<
+      "Processed" | "Pending"
+    >(record.status);
+
+  const numberValue = (
+    value: string,
+  ) => {
+    const parsed = Number(value);
+
+    return Number.isFinite(parsed)
+      ? Math.max(0, parsed)
+      : 0;
+  };
+
+  const gross =
+    numberValue(basic) +
+    numberValue(allowance) +
+    numberValue(bonus);
+
+  const net = Math.max(
+    0,
+    gross -
+      numberValue(deductions),
+  );
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 p-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-500">
+              PAYROLL EDITOR
+            </p>
+
+            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+              {employee.name}
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-400">
+              {employee.id} · {employee.department}
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-semibold text-slate-700">
+              Basic Salary
+
+              <input
+                type="number"
+                min="0"
+                value={basic}
+                onChange={(event) =>
+                  setBasic(event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              />
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Allowance
+
+              <input
+                type="number"
+                min="0"
+                value={allowance}
+                onChange={(event) =>
+                  setAllowance(event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              />
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Bonus
+
+              <input
+                type="number"
+                min="0"
+                value={bonus}
+                onChange={(event) =>
+                  setBonus(event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              />
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Deductions
+
+              <input
+                type="number"
+                min="0"
+                value={deductions}
+                onChange={(event) =>
+                  setDeductions(event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              />
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Payroll Status
+
+              <select
+                value={status}
+                onChange={(event) =>
+                  setStatus(
+                    event.target
+                      .value as
+                      | "Processed"
+                      | "Pending",
+                  )
+                }
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              >
+                <option value="Pending">
+                  Pending
+                </option>
+
+                <option value="Processed">
+                  Processed
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs text-slate-400">
+                Gross
+              </p>
+
+              <p className="mt-1 font-bold text-slate-950">
+                {new Intl.NumberFormat(
+                  "en-IN",
+                  {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  },
+                ).format(gross)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-red-50 p-4">
+              <p className="text-xs text-red-500">
+                Deductions
+              </p>
+
+              <p className="mt-1 font-bold text-red-700">
+                {new Intl.NumberFormat(
+                  "en-IN",
+                  {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  },
+                ).format(
+                  numberValue(
+                    deductions,
+                  ),
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-emerald-50 p-4">
+              <p className="text-xs text-emerald-500">
+                Net Salary
+              </p>
+
+              <p className="mt-1 font-bold text-emerald-700">
+                {new Intl.NumberFormat(
+                  "en-IN",
+                  {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  },
+                ).format(net)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={() =>
+                onSave({
+                  employeeId:
+                    record.employeeId,
+                  basic:
+                    numberValue(basic),
+                  allowance:
+                    numberValue(
+                      allowance,
+                    ),
+                  bonus:
+                    numberValue(bonus),
+                  deductions:
+                    numberValue(
+                      deductions,
+                    ),
+                  status,
+                })
+              }
+              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700"
+            >
+              <Check size={17} />
+              Save Payroll
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2864,7 +5329,7 @@ function HRInsightsPage({
       ================================================= */}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
@@ -2932,7 +5397,7 @@ function HRInsightsPage({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
@@ -2982,7 +5447,7 @@ function HRInsightsPage({
           DEPARTMENT ANALYTICS
       ================================================= */}
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
@@ -3070,7 +5535,7 @@ function HRInsightsPage({
           RISK EMPLOYEES
       ================================================= */}
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="dayflow-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-red-500">
@@ -3303,6 +5768,16 @@ function Setting({
 ========================================================= */
 
 export default function App() {
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("dayflow_theme");
+    return saved === "dark" ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("dayflow_theme", theme);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   const [loggedIn, setLoggedIn] =
     useState(false);
 
@@ -3472,6 +5947,7 @@ export default function App() {
       <EmployeesPage
         employees={employees}
         onEmployeesChange={handleEmployeesChange}
+          leaveRequests={leaveRequests}
       />
     );
   } else if (activePage === "Leave Approvals") {
@@ -3485,6 +5961,9 @@ export default function App() {
     pageContent = (
       <HRAttendancePage
         employees={employees}
+        onEmployeesChange={
+          handleEmployeesChange
+        }
       />
     );
   } else if (activePage === "HR Payroll") {
@@ -3505,7 +5984,9 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <>
+      <style>{DAYFLOW_UI4}</style>
+      <div className="dayflow-ui4 flex min-h-screen bg-slate-50">
       <Sidebar
         role={role}
         activePage={activePage}
@@ -3517,12 +5998,17 @@ export default function App() {
         <Topbar
           role={role}
           activePage={activePage}
+          theme={theme}
+          setTheme={setTheme}
+          employees={employees}
+          leaveRequests={leaveRequests}
         />
 
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8">
+        <main className="dayflow-main flex-1 overflow-y-auto p-5 lg:p-8">
           {pageContent}
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
